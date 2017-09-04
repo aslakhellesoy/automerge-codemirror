@@ -16,9 +16,11 @@
     "jsdom": "^11.2.0",
     "lint-staged": "^4.1.0",
     "mocha": "^3.5.0",
+    "nyc": "^11.1.0",
     "prettier": "^1.6.1"
   },
   "scripts": {
+    "nyc": "nyc --reporter=html --reporter=text mocha",
     "test": "mocha"
   }
 }
