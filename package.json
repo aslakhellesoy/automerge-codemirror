@@ -5,5 +5,14 @@
   "main": "index.js",
   "repository": "https://github.com/aslakhellesoy/automerge-codemirror",
   "author": "Aslak Hellesøy",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "automerge": "^0.4.3",
+    "codemirror": "^5.29.0",
+    "jsdom": "^11.2.0",
+    "mocha": "^3.5.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  }
 }
