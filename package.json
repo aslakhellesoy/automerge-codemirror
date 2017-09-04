@@ -9,8 +9,14 @@
   "devDependencies": {
     "automerge": "^0.4.3",
     "codemirror": "^5.29.0",
+    "eslint": "^4.6.1",
+    "eslint-config-prettier": "^2.4.0",
+    "eslint-plugin-prettier": "^2.2.0",
+    "husky": "^0.14.3",
     "jsdom": "^11.2.0",
-    "mocha": "^3.5.0"
+    "lint-staged": "^4.1.0",
+    "mocha": "^3.5.0",
+    "prettier": "^1.6.1"
   },
   "scripts": {
     "test": "mocha"
