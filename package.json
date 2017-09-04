@@ -1,0 +1,9 @@
+{
+  "name": "automerge-codemirror",
+  "version": "0.0.1",
+  "description": "Automerge plugin for CodeMirror",
+  "main": "index.js",
+  "repository": "https://github.com/aslakhellesoy/automerge-codemirror",
+  "author": "Aslak Hellesøy",
+  "license": "MIT"
+}
