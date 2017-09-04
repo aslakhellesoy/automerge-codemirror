@@ -1,51 +1,42 @@
-function applyDeltasToCodeMirror(deltas, listId, cm) {
-  const cmDoc = cm.getDoc()
+const Automerge = require('automerge')
 
-  for (const delta of deltas) {
-    const listOps = delta.ops.filter(op => op.obj === listId)
-    let cursor = 0
-    let offset = 0
+function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
+  let startPos = 0 // Get character position from # of chars in each line.
+  let i = 0 // i goes through all lines.
 
-    for (const op of listOps) {
-      switch (op.action) {
-        case 'makeList': {
-          break
-        }
-        case 'ins': {
-          const match = /^(.*):(\d+)$/.exec(op.key)
-          if (match) cursor = parseInt(match[2])
-          break
-        }
-        case 'set': {
-          cmDoc.replaceRange(op.value, cmDoc.posFromIndex(cursor))
-          break
-        }
-        case 'del': {
-          const match = /^(.*):(\d+)$/.exec(op.key)
-          if (match) cursor = parseInt(match[2])
-          const cur = cursor + offset
-          cmDoc.replaceRange(
-            '',
-            cmDoc.posFromIndex(cur),
-            cmDoc.posFromIndex(cur + 1)
-          )
-          offset--
-          break
-        }
-        default:
-          throw new Error(`Unexpected op: ${JSON.stringify(op)}`)
-      }
+  while (i < change.from.line) {
+    startPos += cm.lineInfo(i).text.length + 1 // Add 1 for '\n'
+    i++
+  }
+
+  startPos += change.from.ch
+
+  if (change.to.line === change.from.line && change.to.ch === change.from.ch) {
+    // nothing was removed.
+  } else {
+    // delete.removed contains an array of removed lines as strings, so this adds
+    // all the lengths. Later change.removed.length - 1 is added for the \n-chars
+    // (-1 because the linebreak on the last line won't get deleted)
+    let delLen = 0
+    for (let rm = 0; rm < change.removed.length; rm++) {
+      delLen += change.removed[rm].length
     }
+    delLen += change.removed.length - 1
+    state = Automerge.changeset(state, 'Delete', doc => {
+      findList(doc).splice(startPos, delLen)
+    })
   }
+  if (change.text) {
+    state = Automerge.changeset(state, 'Insert', doc => {
+      findList(doc).splice(startPos, 0, ...change.text.join('\n').split(''))
+    })
+  }
+  if (change.next) {
+    state = applyCodeMirrorChangeToAutomerge(state, change.next, cm)
+  }
+  return state
 }
 
-function getListId(deltas, objectId, key) {
-  for (const delta of deltas) {
-    const linkOp = delta.ops.find(
-      op => op.action === 'link' && op.obj === objectId && op.key === key
-    )
-    if (linkOp) return linkOp.value
-  }
+module.exports = {
+  applyCodeMirrorChangeToAutomerge,
 }
-
-module.exports = { getListId, applyDeltasToCodeMirror }

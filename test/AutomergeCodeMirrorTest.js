@@ -6,73 +6,48 @@ const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
 
 describe('AutomergeCodeMirror', () => {
-  let initialState, initialCardState, listId, cm
-
-  function validate(state, expectedText) {
-    const deltas = Automerge.getDeltasAfter(
-      state,
-      Automerge.getVClock(initialState)
-    )
-    AutomergeCodeMirror.applyDeltasToCodeMirror(deltas, listId, cm)
-    assert.equal(state.card.title.join(''), expectedText)
-    assert.equal(cm.getDoc().getValue(), expectedText)
-  }
+  let cm, state
 
   beforeEach(() => {
     cm = CodeMirror.fromTextArea(document.getElementById('editor'))
-    initialState = Automerge.init()
-    initialCardState = Automerge.changeset(initialState, 'Create card', doc => {
+    state = Automerge.init()
+    state = Automerge.changeset(state, 'Create card', doc => {
       doc.card = {
         title: [],
       }
     })
-    const initialCardDeltas = Automerge.getDeltasAfter(
-      initialCardState,
-      Automerge.getVClock(initialState)
-    )
-
-    listId = AutomergeCodeMirror.getListId(
-      initialCardDeltas,
-      initialCardState.card._objectId,
-      'title'
-    )
   })
 
-  it('inserts a sequence', () => {
-    const state = Automerge.changeset(initialCardState, 'Edit card', doc => {
-      doc.card.title.insertAt(0, 'H')
-      doc.card.title.insertAt(1, 'E')
-      doc.card.title.insertAt(2, 'L')
-      doc.card.title.insertAt(3, 'L')
-      doc.card.title.insertAt(4, 'O')
-    })
-    validate(state, 'HELLO')
-  })
+  describe('CodeMirror -> Automerge', () => {
+    const findList = doc => doc.card.title
 
-  it('inserts and deletes everything', () => {
-    const s = Automerge.changeset(initialCardState, 'Add text', doc => {
-      doc.card.title.insertAt(0, 'A')
-      doc.card.title.insertAt(1, 'S')
-    })
-    const state = Automerge.changeset(s, 'Delete text', doc => {
-      doc.card.title.splice(0, 2)
-    })
-    validate(state, '')
-  })
-
-  it('Adds and deletes a sequence', () => {
-    const s = Automerge.changeset(initialCardState, 'Add text', doc => {
-      doc.card.title.insertAt(0, 'H')
-      doc.card.title.insertAt(1, 'E')
-      doc.card.title.insertAt(2, 'L')
-      doc.card.title.insertAt(3, 'L')
-      doc.card.title.insertAt(4, 'O')
-    })
-    const state = Automerge.changeset(s, 'Delete text', doc => {
-      doc.card.title.splice(1, 0, 'X')
-      doc.card.title.splice(3, 2)
+    beforeEach(() => {
+      cm.on('change', (cm, change) => {
+        state = AutomergeCodeMirror.applyCodeMirrorChangeToAutomerge(
+          state,
+          findList,
+          change,
+          cm
+        )
+      })
     })
 
-    validate(state, 'HXEO')
+    it('adds text', () => {
+      const text = 'HELLO'
+      cm.setValue(text)
+      assert.strictEqual(state.card.title.join(''), text)
+    })
+
+    it('replaces a couple of lines', () => {
+      const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
+      cm.setValue(text)
+      assert.strictEqual(state.card.title.join(''), text)
+
+      cm.replaceRange('evil\nrats\n', { line: 1, ch: 0 }, { line: 3, ch: 0 })
+      assert.strictEqual(
+        state.card.title.join(''),
+        'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
+      )
+    })
   })
 })
