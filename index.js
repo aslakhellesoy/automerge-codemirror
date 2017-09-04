@@ -1,15 +1,7 @@
 const Automerge = require('automerge')
 
 function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
-  let startPos = 0 // Get character position from # of chars in each line.
-  let i = 0 // i goes through all lines.
-
-  while (i < change.from.line) {
-    startPos += cm.lineInfo(i).text.length + 1 // Add 1 for '\n'
-    i++
-  }
-
-  startPos += change.from.ch
+  const startPos = cm.indexFromPos(change.from)
 
   if (change.to.line === change.from.line && change.to.ch === change.from.ch) {
     // nothing was removed.
