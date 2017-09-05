@@ -38,6 +38,13 @@ describe('AutomergeCodeMirror', () => {
       assert.strictEqual(state.card.title.join(''), text)
     })
 
+    it('removes text', () => {
+      cm.setValue('')
+      cm.replaceRange('HELLO', { line: 0, ch: 0 })
+      cm.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
+      assert.strictEqual(state.card.title.join(''), '')
+    })
+
     it('replaces a couple of lines', () => {
       const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
       cm.setValue(text)
