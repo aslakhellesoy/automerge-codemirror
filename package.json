@@ -22,5 +22,8 @@
   "scripts": {
     "nyc": "nyc --reporter=html --reporter=text mocha",
     "test": "mocha"
+  },
+  "dependencies": {
+    "diff-match-patch": "^1.0.0"
   }
 }

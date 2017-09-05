@@ -1,4 +1,6 @@
 const Automerge = require('automerge')
+const DiffMatchPatch = require('diff-match-patch')
+const dmp = new DiffMatchPatch()
 
 /**
  * Applies a CodeMirror change to AutoMerge
@@ -34,6 +36,36 @@ function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
   return state
 }
 
+function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
+  const before = findList(state).join('')
+  const after = findList(newState).join('')
+  const diff = dmp.diff_main(before, after)
+
+  let index = 0
+  for (const diffComp of diff) {
+    const fromPos = cm.posFromIndex(index)
+    switch (diffComp[0]) {
+      case -1: {
+        // DELETION
+        const toPos = cm.posFromIndex(index + diffComp[1].length)
+        cm.replaceRange('', fromPos, toPos)
+        break
+      }
+      case 0: {
+        // EQUALITY
+        index += diffComp[1].length
+        break
+      }
+      case 1: {
+        // INSERTION
+        cm.replaceRange(diffComp[1], fromPos)
+        break
+      }
+    }
+  }
+}
+
 module.exports = {
   applyCodeMirrorChangeToAutomerge,
+  applyAutomergeDiffToCodeMirror,
 }
