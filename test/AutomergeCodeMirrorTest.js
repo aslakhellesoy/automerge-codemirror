@@ -26,45 +26,66 @@ describe('AutomergeCodeMirror', () => {
         doc.card.title.splice(0, 0, ...'HELLO'.split(''))
       })
 
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(state, newState, findList, cm)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
+        state,
+        newState,
+        findList,
+        cm
+      )
 
       assert.strictEqual(cm.getValue(), newState.card.title.join(''))
     })
 
     it('removes text', () => {
+      const initialState = state
       state = Automerge.changeset(state, 'Insert', doc => {
         doc.card.title.splice(0, 0, ...'HELLO'.split(''))
       })
-      const newState = Automerge.changeset(state, 'Insert', doc => {
+      state = Automerge.changeset(state, 'Delete', doc => {
         doc.card.title.splice(0, 5)
       })
 
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(state, newState, findList, cm)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
+        initialState,
+        state,
+        findList,
+        cm
+      )
 
-      assert.strictEqual(cm.getValue(), newState.card.title.join(''))
+      assert.strictEqual(cm.getValue(), state.card.title.join(''))
     })
 
     it('replaces a couple of lines', () => {
-      const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
-      const state2 = Automerge.changeset(state, 'Insert', doc => {
+      state = Automerge.changeset(state, 'Insert', doc => {
+        const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
         doc.card.title.splice(0, 0, ...text.split(''))
       })
-      const state3 = Automerge.changeset(state2, 'Insert', doc => {
+      cm.setValue(state.card.title.join(''))
+      const initialState = state
+
+      state = Automerge.changeset(initialState, 'Replace', doc => {
         const replacement = 'evil\nrats\n'
         doc.card.title.splice(6, 11, replacement)
       })
 
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(state, state3, findList, cm)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
+        initialState,
+        state,
+        findList,
+        cm
+      )
 
-      assert.strictEqual(cm.getValue(), state3.card.title.join(''))
+      assert.strictEqual(cm.getValue(), state.card.title.join(''))
     })
 
     for (let n = 0; n < 10; n++) {
       it(`works with random edits (fuzz test ${n})`, () => {
-        const initialState = state
         state = Automerge.changeset(state, 'Insert', doc => {
           doc.card.title.splice(0, 0, ...randomString(20).split(''))
         })
+        cm.setValue(state.card.title.join(''))
+        const initialState = state
+
         for (let t = 0; t < 10; t++) {
           const textLength = state.card.title.length
           const index = Math.floor(Math.random() * textLength)
@@ -82,7 +103,12 @@ describe('AutomergeCodeMirror', () => {
             })
           }
         }
-        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(initialState, state, findList, cm)
+        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
+          initialState,
+          state,
+          findList,
+          cm
+        )
 
         assert.strictEqual(state.card.title.join(''), cm.getValue())
       })

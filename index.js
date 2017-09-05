@@ -58,6 +58,7 @@ function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
       }
       case 1: {
         // INSERTION
+        index += diffComp[1].length
         cm.replaceRange(diffComp[1], fromPos)
         break
       }
