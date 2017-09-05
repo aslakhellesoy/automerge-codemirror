@@ -6,14 +6,13 @@ function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
   if (change.to.line === change.from.line && change.to.ch === change.from.ch) {
     // nothing was removed.
   } else {
-    // delete.removed contains an array of removed lines as strings.
-    // each removed line does not include the \n, so we add +1
+    // delete.removed contains an array of removed lines as strings (without the trailing \n).
     // Finally remove 1 because the last \n won't be deleted
-    let delLen =
+    const removedLength =
       change.removed.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
 
     state = Automerge.changeset(state, 'Delete', doc => {
-      findList(doc).splice(startPos, delLen)
+      findList(doc).splice(startPos, removedLength)
     })
   }
   if (change.text) {
