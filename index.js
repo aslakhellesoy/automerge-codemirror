@@ -41,28 +41,32 @@ function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
   const after = findList(newState).join('')
   const diff = dmp.diff_main(before, after)
   let index = 0
-  for (const diffComp of diff) {
-    const fromPos = cm.posFromIndex(index)
-    switch (diffComp[0]) {
-      case -1: {
-        // DELETION
-        const toPos = cm.posFromIndex(index + diffComp[1].length)
-        cm.replaceRange('', fromPos, toPos, 'automerge')
-        break
-      }
-      case 0: {
-        // EQUALITY
-        index += diffComp[1].length
-        break
-      }
-      case 1: {
-        // INSERTION
-        index += diffComp[1].length
-        cm.replaceRange(diffComp[1], fromPos, null, 'automerge')
-        break
+
+  cm.operation(() => {
+    for (const diffComp of diff) {
+      switch (diffComp[0]) {
+        case -1: {
+          // DELETION
+          const fromPos = cm.posFromIndex(index)
+          const toPos = cm.posFromIndex(index + diffComp[1].length)
+          cm.replaceRange('', fromPos, toPos, 'automerge')
+          break
+        }
+        case 0: {
+          // EQUALITY
+          index += diffComp[1].length
+          break
+        }
+        case 1: {
+          // INSERTION
+          const fromPos = cm.posFromIndex(index)
+          index += diffComp[1].length
+          cm.replaceRange(diffComp[1], fromPos, null, 'automerge')
+          break
+        }
       }
     }
-  }
+  })
 }
 
 function docSetHandler(docSet, findText, getCodeMirror) {
