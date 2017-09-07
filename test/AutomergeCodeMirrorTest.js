@@ -159,6 +159,69 @@ describe('AutomergeCodeMirror', () => {
       })
     }
   })
+
+  describe('CodeMirror <-> Automerge <-> CodeMirror', () => {
+    it('syncs', () => {
+      const leftDocSet = new Automerge.DocSet()
+      const rightDocSet = new Automerge.DocSet()
+
+      let leftConnection, rightConnection
+      leftConnection = new Automerge.Connection(leftDocSet, message =>
+        rightConnection.receiveMsg(message)
+      )
+      rightConnection = new Automerge.Connection(rightDocSet, message =>
+        leftConnection.receiveMsg(message)
+      )
+      leftConnection.open()
+      rightConnection.open()
+
+      const leftDoc = Automerge.changeset(
+        Automerge.init(),
+        doc => (doc.text = 'hello'.split(''))
+      )
+      const findText = doc => doc.text
+
+      const leftCodeMirror = CodeMirror.fromTextArea(
+        document.getElementById('left')
+      )
+      leftDocSet.registerHandler(
+        AutomergeCodeMirror.docSetHandler(
+          leftDocSet,
+          findText,
+          (/* docId */) => leftCodeMirror
+        )
+      )
+
+      const rightCodeMirror = CodeMirror.fromTextArea(
+        document.getElementById('left')
+      )
+      rightDocSet.registerHandler(
+        AutomergeCodeMirror.docSetHandler(
+          rightDocSet,
+          findText,
+          (/* docId */) => rightCodeMirror
+        )
+      )
+
+      leftDocSet.setDoc('DOC', leftDoc)
+
+      leftCodeMirror.replaceRange(
+        'x',
+        leftCodeMirror.posFromIndex(1),
+        leftCodeMirror.posFromIndex(3)
+      )
+      assert.strictEqual(leftCodeMirror.getValue(), 'hxlo')
+      assert.strictEqual(rightCodeMirror.getValue(), 'hxlo')
+
+      rightCodeMirror.replaceRange(
+        'y',
+        rightCodeMirror.posFromIndex(1),
+        rightCodeMirror.posFromIndex(3)
+      )
+      assert.strictEqual(leftCodeMirror.getValue(), 'hyo')
+      assert.strictEqual(rightCodeMirror.getValue(), 'hyo')
+    })
+  })
 })
 
 function monkeyType(cm) {

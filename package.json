@@ -7,7 +7,6 @@
   "author": "Aslak Hellesøy",
   "license": "MIT",
   "devDependencies": {
-    "automerge": "^0.4.3",
     "codemirror": "^5.29.0",
     "eslint": "^4.6.1",
     "eslint-config-prettier": "^2.4.0",
@@ -17,13 +16,17 @@
     "lint-staged": "^4.1.0",
     "mocha": "^3.5.0",
     "nyc": "^11.1.0",
-    "prettier": "^1.6.1"
+    "prettier": "^1.6.1",
+    "webpack": "^3.5.5"
   },
   "scripts": {
     "nyc": "nyc --reporter=html --reporter=text mocha",
-    "test": "mocha"
+    "test": "mocha",
+    "build-example": "webpack example/src/app.js example/build/app.js",
+    "build-example-watch": "webpack --watch example/src/app.js example/build/app.js"
   },
   "dependencies": {
+    "automerge": "automerge/automerge#connection",
     "diff-match-patch": "^1.0.0"
   }
 }

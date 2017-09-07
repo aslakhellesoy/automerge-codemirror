@@ -1,7 +1,11 @@
 // Minimal browser-like environment to make CodeMirror load (for tests in Node.js)
 const { JSDOM } = require('jsdom')
 const dom = new JSDOM(
-  '<html><body><textarea id="editor"></textarea></body></html>'
+  '<html><body>' +
+    '<textarea id="editor"></textarea>' +
+    '<textarea id="left"></textarea>' +
+    '<textarea id="right"></textarea>' +
+    '</body></html>'
 )
 global.window = dom.window
 global.navigator = dom.window.navigator

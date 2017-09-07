@@ -40,7 +40,6 @@ function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
   const before = findList(state).join('')
   const after = findList(newState).join('')
   const diff = dmp.diff_main(before, after)
-
   let index = 0
   for (const diffComp of diff) {
     const fromPos = cm.posFromIndex(index)
@@ -48,7 +47,7 @@ function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
       case -1: {
         // DELETION
         const toPos = cm.posFromIndex(index + diffComp[1].length)
-        cm.replaceRange('', fromPos, toPos)
+        cm.replaceRange('', fromPos, toPos, 'automerge')
         break
       }
       case 0: {
@@ -59,9 +58,41 @@ function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
       case 1: {
         // INSERTION
         index += diffComp[1].length
-        cm.replaceRange(diffComp[1], fromPos)
+        cm.replaceRange(diffComp[1], fromPos, null, 'automerge')
         break
       }
+    }
+  }
+}
+
+function docSetHandler(docSet, findText, getCodeMirror) {
+  const docs = new Map()
+
+  return (docId, doc) => {
+    const codemirror = getCodeMirror(docId)
+    if (!codemirror) return
+
+    if (!docs.has(docId)) {
+      docs.set(docId, doc)
+      const text = findText(doc).join('')
+      codemirror.setValue(text)
+      codemirror.on('change', (cm, change) => {
+        if (change.origin === 'automerge') return
+
+        const oldDoc = docs.get(docId)
+        const newDoc = applyCodeMirrorChangeToAutomerge(
+          oldDoc,
+          findText,
+          change,
+          cm
+        )
+        docs.set(docId, newDoc)
+        docSet.setDoc(docId, newDoc)
+      })
+    } else {
+      const lastDoc = docs.get(docId)
+      docs.set(docId, doc)
+      applyAutomergeDiffToCodeMirror(lastDoc, doc, findText, codemirror)
     }
   }
 }
@@ -69,4 +100,5 @@ function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
 module.exports = {
   applyCodeMirrorChangeToAutomerge,
   applyAutomergeDiffToCodeMirror,
+  docSetHandler,
 }
