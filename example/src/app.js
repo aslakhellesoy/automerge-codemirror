@@ -37,6 +37,20 @@ rightDocSet.registerHandler(
   )
 )
 
+document
+  .querySelector('#left-connected')
+  .addEventListener(
+    'change',
+    e => (e.target.checked ? leftConnection.open() : leftConnection.close())
+  )
+
+document
+  .querySelector('#right-connected')
+  .addEventListener(
+    'change',
+    e => (e.target.checked ? rightConnection.open() : rightConnection.close())
+  )
+
 const leftDoc = Automerge.changeset(
   Automerge.init(),
   doc => (doc.text = 'hello'.split(''))

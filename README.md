@@ -10,7 +10,10 @@ method.
 When the `Array` in the Automerge document is changed, CodeMirror's value is updated via the `CodeMirror#replaceRange`
 method.
 
-## TODO
+## Demo
 
-* Implement Automerge->CodeMirror sync (only CodeMirror->Automerge is currently implemented)
-* Set up a demo
+Build it:
+
+    yarn build-example
+
+Open `example/index.html`
