@@ -8,6 +8,7 @@
   "license": "MIT",
   "devDependencies": {
     "codemirror": "^5.29.0",
+    "debug": "^3.0.1",
     "eslint": "^4.6.1",
     "eslint-config-prettier": "^2.4.0",
     "eslint-plugin-prettier": "^2.2.0",

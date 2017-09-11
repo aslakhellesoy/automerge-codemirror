@@ -1,6 +1,7 @@
 const Automerge = require('automerge')
 const DiffMatchPatch = require('diff-match-patch')
 const dmp = new DiffMatchPatch()
+const debug = require('debug')('automerge')
 
 /**
  * Applies a CodeMirror change to AutoMerge
@@ -12,6 +13,7 @@ const dmp = new DiffMatchPatch()
  * @returns {*}
  */
 function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
+  debug('cm.indexFromPos')
   const startPos = cm.indexFromPos(change.from)
 
   const removedLines = change.removed
@@ -19,16 +21,20 @@ function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
 
   const removedLength =
     removedLines.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
-  if (removedLength > 0)
+  if (removedLength > 0) {
+    debug('Automerge.changeset (Delete)')
     state = Automerge.changeset(state, 'Delete', doc => {
       findList(doc).splice(startPos, removedLength)
     })
+  }
 
   const addedText = addedLines.join('\n')
-  if (addedText.length > 0)
+  if (addedText.length > 0) {
+    debug('Automerge.changeset (Insert)')
     state = Automerge.changeset(state, 'Insert', doc => {
       findList(doc).splice(startPos, 0, ...addedText.split(''))
     })
+  }
 
   if (change.next) {
     state = applyCodeMirrorChangeToAutomerge(state, change.next, cm)
