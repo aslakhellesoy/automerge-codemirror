@@ -27,7 +27,6 @@
     "build-example-watch": "webpack --watch example/src/app.js example/build/app.js"
   },
   "dependencies": {
-    "automerge": "automerge/automerge#connection",
-    "diff-match-patch": "^1.0.0"
+    "automerge": "automerge/automerge#incremental"
   }
 }

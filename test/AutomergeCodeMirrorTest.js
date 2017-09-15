@@ -7,10 +7,12 @@ const AutomergeCodeMirror = require('..')
 
 describe('AutomergeCodeMirror', () => {
   const findList = doc => doc.card.title
+  const getCodeMirror = objectId => codeMirrors.get(objectId)
 
-  let cm, state
+  let cm, state, codeMirrors
 
   beforeEach(() => {
+    codeMirrors = new Map()
     cm = CodeMirror.fromTextArea(document.getElementById('editor'))
     state = Automerge.init()
     state = Automerge.changeset(state, 'Create card', doc => {
@@ -18,6 +20,8 @@ describe('AutomergeCodeMirror', () => {
         title: [],
       }
     })
+    const objectId = state.card.title._objectId
+    codeMirrors.set(objectId, cm)
   })
 
   describe('Automerge -> CodeMirror', () => {
@@ -29,8 +33,7 @@ describe('AutomergeCodeMirror', () => {
       AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
         state,
         newState,
-        findList,
-        cm
+        getCodeMirror
       )
 
       assert.strictEqual(cm.getValue(), newState.card.title.join(''))
@@ -48,8 +51,7 @@ describe('AutomergeCodeMirror', () => {
       AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
         initialState,
         state,
-        findList,
-        cm
+        getCodeMirror
       )
 
       assert.strictEqual(cm.getValue(), state.card.title.join(''))
@@ -71,8 +73,7 @@ describe('AutomergeCodeMirror', () => {
       AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
         initialState,
         state,
-        findList,
-        cm
+        getCodeMirror
       )
 
       assert.strictEqual(cm.getValue(), state.card.title.join(''))
@@ -95,7 +96,9 @@ describe('AutomergeCodeMirror', () => {
             // Add text
             const text = randomString(editLength)
             state = Automerge.changeset(state, 'Insert', doc => {
-              doc.card.title.splice(index, 0, text)
+              text
+                .split('')
+                .forEach((c, i) => doc.card.title.splice(index + i, 0, c))
             })
           } else {
             state = Automerge.changeset(state, 'Delete', doc => {
@@ -106,8 +109,7 @@ describe('AutomergeCodeMirror', () => {
         AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
           initialState,
           state,
-          findList,
-          cm
+          getCodeMirror
         )
 
         assert.strictEqual(state.card.title.join(''), cm.getValue())

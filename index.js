@@ -1,6 +1,4 @@
 const Automerge = require('automerge')
-const DiffMatchPatch = require('diff-match-patch')
-const dmp = new DiffMatchPatch()
 const debug = require('debug')('automerge')
 
 /**
@@ -42,37 +40,26 @@ function applyCodeMirrorChangeToAutomerge(state, findList, change, cm) {
   return state
 }
 
-function applyAutomergeDiffToCodeMirror(state, newState, findList, cm) {
-  const before = findList(state).join('')
-  const after = findList(newState).join('')
-  const diff = dmp.diff_main(before, after)
-  let index = 0
-
-  cm.operation(() => {
-    for (const diffComp of diff) {
-      switch (diffComp[0]) {
-        case -1: {
-          // DELETION
-          const fromPos = cm.posFromIndex(index)
-          const toPos = cm.posFromIndex(index + diffComp[1].length)
-          cm.replaceRange('', fromPos, toPos, 'automerge')
+function applyAutomergeDiffToCodeMirror(oldState, newState, getCodeMirror) {
+  const diff = Automerge.diff(oldState, newState)
+  for (const d of diff) {
+    const codeMirror = getCodeMirror(d.objectId)
+    if (codeMirror) {
+      switch (d.action) {
+        case 'insert': {
+          const fromPos = codeMirror.posFromIndex(d.index)
+          codeMirror.replaceRange(d.value, fromPos, null, 'automerge')
           break
         }
-        case 0: {
-          // EQUALITY
-          index += diffComp[1].length
-          break
-        }
-        case 1: {
-          // INSERTION
-          const fromPos = cm.posFromIndex(index)
-          index += diffComp[1].length
-          cm.replaceRange(diffComp[1], fromPos, null, 'automerge')
+        case 'remove': {
+          const fromPos = codeMirror.posFromIndex(d.index)
+          const toPos = codeMirror.posFromIndex(d.index + 1)
+          codeMirror.replaceRange('', fromPos, toPos, 'automerge')
           break
         }
       }
     }
-  })
+  }
 }
 
 function docSetHandler(docSet, findText, getCodeMirror) {
@@ -102,7 +89,7 @@ function docSetHandler(docSet, findText, getCodeMirror) {
     } else {
       const lastDoc = docs.get(docId)
       docs.set(docId, doc)
-      applyAutomergeDiffToCodeMirror(lastDoc, doc, findText, codemirror)
+      applyAutomergeDiffToCodeMirror(lastDoc, doc, getCodeMirror)
     }
   }
 }
