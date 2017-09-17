@@ -164,6 +164,7 @@ describe('AutomergeCodeMirror', () => {
 
   describe('CodeMirror <-> Automerge <-> CodeMirror', () => {
     it('syncs', () => {
+      // Automerge wiring
       const leftDocSet = new Automerge.DocSet()
       const rightDocSet = new Automerge.DocSet()
 
@@ -177,41 +178,62 @@ describe('AutomergeCodeMirror', () => {
       leftConnection.open()
       rightConnection.open()
 
+      let docId = 'DOC'
+      // Initial doc
       const leftDoc = Automerge.changeset(
         Automerge.init(),
         doc => (doc.text = 'hello'.split(''))
       )
+
+      // CodeMirror wiring
+      const textObjectId = leftDoc.text._objectId
+      assert(textObjectId)
       const findText = doc => doc.text
 
+      // Left CodeMirror
       const leftCodeMirror = CodeMirror.fromTextArea(
         document.getElementById('left')
       )
+      leftCodeMirror.on(
+        'change',
+        AutomergeCodeMirror.updateAutomergeHandler(leftDocSet, docId, findText)
+      )
+      const getCodeMirrorLeft = objectId => {
+        if (objectId === textObjectId) return leftCodeMirror
+      }
       leftDocSet.registerHandler(
-        AutomergeCodeMirror.docSetHandler(
-          leftDocSet,
-          findText,
-          (/* docId */) => leftCodeMirror
-        )
+        AutomergeCodeMirror.updateCodeMirrorHandler(getCodeMirrorLeft)
       )
 
+      // Right CodeMirror
       const rightCodeMirror = CodeMirror.fromTextArea(
         document.getElementById('left')
       )
+      rightCodeMirror.on(
+        'change',
+        AutomergeCodeMirror.updateAutomergeHandler(rightDocSet, docId, findText)
+      )
+      const getCodeMirrorRight = objectId => {
+        if (objectId === textObjectId) return rightCodeMirror
+      }
       rightDocSet.registerHandler(
-        AutomergeCodeMirror.docSetHandler(
-          rightDocSet,
-          findText,
-          (/* docId */) => rightCodeMirror
-        )
+        AutomergeCodeMirror.updateCodeMirrorHandler(getCodeMirrorRight)
       )
 
-      leftDocSet.setDoc('DOC', leftDoc)
+      assert.strictEqual(leftCodeMirror.getValue(), '')
+      assert.strictEqual(rightCodeMirror.getValue(), '')
+
+      leftDocSet.setDoc(docId, leftDoc)
+
+      assert.strictEqual(leftCodeMirror.getValue(), 'hello')
+      assert.strictEqual(rightCodeMirror.getValue(), 'hello')
 
       leftCodeMirror.replaceRange(
         'x',
         leftCodeMirror.posFromIndex(1),
         leftCodeMirror.posFromIndex(3)
       )
+
       assert.strictEqual(leftCodeMirror.getValue(), 'hxlo')
       assert.strictEqual(rightCodeMirror.getValue(), 'hxlo')
 
