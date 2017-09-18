@@ -77,6 +77,7 @@ function updateAutomergeHandler(docSet, docId, findText) {
     busyCodeMirrors.add(codeMirror)
 
     const oldDoc = docSet.getDoc(docId)
+    if (!oldDoc) throw new Error(`docSet doesn't have a doc with id ${docId}`)
     const newDoc = applyCodeMirrorChangeToAutomerge(
       oldDoc,
       findText,
