@@ -3,13 +3,13 @@ const Automerge = require('automerge')
 /**
  * Applies a CodeMirror change to AutoMerge
  *
- * @param state the Automerge state before the change is applied
+ * @param doc the Automerge state before the change is applied
  * @param findText a function that will return the single-character string Array with the text
  * @param change the change object from CodeMirror. See https://codeMirror.net/doc/manual.html#events
  * @param codeMirror the CodeMirror instance
  * @returns {*}
  */
-function applyCodeMirrorChangeToAutomerge(state, findText, change, codeMirror) {
+function applyCodeMirrorChangeToAutomerge(doc, findText, change, codeMirror) {
   const startPos = codeMirror.indexFromPos(change.from)
 
   const removedLines = change.removed
@@ -18,29 +18,29 @@ function applyCodeMirrorChangeToAutomerge(state, findText, change, codeMirror) {
   const removedLength =
     removedLines.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
   if (removedLength > 0) {
-    state = Automerge.changeset(state, 'Delete', doc => {
-      findText(doc).splice(startPos, removedLength)
+    doc = Automerge.changeset(doc, 'Delete', mdoc => {
+      findText(mdoc).splice(startPos, removedLength)
     })
   }
 
   const addedText = addedLines.join('\n')
   if (addedText.length > 0) {
-    state = Automerge.changeset(state, 'Insert', doc => {
+    doc = Automerge.changeset(doc, 'Insert', doc => {
       const text = findText(doc)
       text.splice(startPos, 0, ...addedText.split(''))
     })
   }
 
   if (change.next) {
-    state = applyCodeMirrorChangeToAutomerge(state, change.next, codeMirror)
+    doc = applyCodeMirrorChangeToAutomerge(doc, change.next, codeMirror)
   }
-  return state
+  return doc
 }
 
 const busyCodeMirrors = new Set()
 
-function applyAutomergeDiffToCodeMirror(oldState, newState, getCodeMirror) {
-  const diff = Automerge.diff(oldState, newState)
+function applyAutomergeDiffToCodeMirror(oldDoc, newDoc, getCodeMirror) {
+  const diff = Automerge.diff(oldDoc, newDoc)
   for (const d of diff) {
     const codeMirror = getCodeMirror(d.objectId)
     if (codeMirror && !busyCodeMirrors.has(codeMirror)) {
