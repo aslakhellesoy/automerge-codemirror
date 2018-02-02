@@ -4,7 +4,7 @@
 
 Automerge-CodeMirror links a CodeMirror instance to an `Array` of single-character strings in an Automerge document.
 
-When the CodeMirror text is changed, the linked `Array` in the Automerge document is updated via the `Automerge#changeset`
+When the CodeMirror text is changed, the linked `Array` in the Automerge document is updated via the `Automerge#change`
 method.
 
 When the `Array` in the Automerge document is changed, CodeMirror's value is updated via the `CodeMirror#replaceRange`

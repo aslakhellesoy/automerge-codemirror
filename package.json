@@ -7,18 +7,18 @@
   "author": "Aslak Hellesøy",
   "license": "MIT",
   "devDependencies": {
-    "codemirror": "^5.29.0",
-    "debug": "^3.0.1",
-    "eslint": "^4.6.1",
-    "eslint-config-prettier": "^2.4.0",
-    "eslint-plugin-prettier": "^2.2.0",
+    "codemirror": "^5.33.0",
+    "debug": "^3.1.0",
+    "eslint": "^4.16.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.5.0",
     "husky": "^0.14.3",
-    "jsdom": "^11.2.0",
-    "lint-staged": "^4.1.0",
-    "mocha": "^3.5.0",
-    "nyc": "^11.1.0",
-    "prettier": "^1.6.1",
-    "webpack": "^3.5.5"
+    "jsdom": "^11.6.1",
+    "lint-staged": "^6.1.0",
+    "mocha": "^5.0.0",
+    "nyc": "^11.4.0",
+    "prettier": "^1.10.2",
+    "webpack": "^3.10.0"
   },
   "scripts": {
     "nyc": "nyc --reporter=html --reporter=text mocha",
@@ -27,6 +27,6 @@
     "build-example-watch": "webpack --watch example/src/app.js example/build/app.js"
   },
   "dependencies": {
-    "automerge": "^0.5.0"
+    "automerge": "automerge/automerge"
   }
 }

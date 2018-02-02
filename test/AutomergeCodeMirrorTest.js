@@ -6,113 +6,105 @@ const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
 
 describe('AutomergeCodeMirror', () => {
-  const findList = doc => doc.card.title
-  const getCodeMirror = objectId => codeMirrors.get(objectId)
-
-  let cm, state, codeMirrors
+  let cm, doc
 
   beforeEach(() => {
-    codeMirrors = new Map()
     cm = CodeMirror.fromTextArea(document.getElementById('editor'))
-    state = Automerge.init()
-    state = Automerge.changeset(state, 'Create card', doc => {
-      doc.card = {
-        title: [],
-      }
+    doc = Automerge.init()
+    doc = Automerge.change(doc, 'Create text', doc => {
+      doc.text = new Automerge.Text()
     })
-    const objectId = state.card.title._objectId
-    codeMirrors.set(objectId, cm)
   })
 
   describe('Automerge -> CodeMirror', () => {
     it('adds text', () => {
-      const newState = Automerge.changeset(state, 'Insert', doc => {
-        doc.card.title.splice(0, 0, ...'HELLO'.split(''))
+      const newDoc = Automerge.change(doc, 'Insert', doc => {
+        doc.text.insertAt(0, ...'HELLO'.split(''))
       })
 
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
-        state,
-        newState,
-        getCodeMirror
-      )
+      const diff = Automerge.diff(doc, newDoc)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
 
-      assert.strictEqual(cm.getValue(), newState.card.title.join(''))
+      assert.strictEqual(cm.getValue(), newDoc.text.join(''))
     })
 
     it('removes text', () => {
-      const initialState = state
-      state = Automerge.changeset(state, 'Insert', doc => {
-        doc.card.title.splice(0, 0, ...'HELLO'.split(''))
+      const initialDoc = doc
+      doc = Automerge.change(doc, 'Insert', doc => {
+        doc.text.splice(0, 0, ...'HELLO'.split(''))
       })
-      state = Automerge.changeset(state, 'Delete', doc => {
-        doc.card.title.splice(0, 5)
+      doc = Automerge.change(doc, 'Delete', doc => {
+        doc.text.splice(0, 5)
       })
 
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
-        initialState,
-        state,
-        getCodeMirror
-      )
+      const diff = Automerge.diff(initialDoc, doc)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
 
-      assert.strictEqual(cm.getValue(), state.card.title.join(''))
+      assert.strictEqual(cm.getValue(), doc.text.join(''))
     })
 
     it('replaces a couple of lines', () => {
-      state = Automerge.changeset(state, 'Insert', doc => {
+      doc = Automerge.change(doc, 'Insert', doc => {
         const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
-        doc.card.title.splice(0, 0, ...text.split(''))
+        doc.text.splice(0, 0, ...text.split(''))
       })
-      cm.setValue(state.card.title.join(''))
-      const initialState = state
+      cm.setValue(doc.text.join(''))
+      const initialDoc = doc
 
-      state = Automerge.changeset(initialState, 'Replace', doc => {
+      doc = Automerge.change(initialDoc, 'Replace', doc => {
         const replacement = 'evil\nrats\n'
-        doc.card.title.splice(6, 11, replacement)
+        doc.text.splice(6, 11, replacement)
       })
 
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
-        initialState,
-        state,
-        getCodeMirror
-      )
+      const diff = Automerge.diff(initialDoc, doc)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
 
-      assert.strictEqual(cm.getValue(), state.card.title.join(''))
+      assert.strictEqual(cm.getValue(), doc.text.join(''))
     })
 
-    for (let n = 0; n < 10; n++) {
+    for (let n = 0; n < 0; n++) {
       it(`works with random edits (fuzz test ${n})`, () => {
-        state = Automerge.changeset(state, 'Insert', doc => {
-          doc.card.title.splice(0, 0, ...randomString(20).split(''))
+        doc = Automerge.change(doc, 'Insert', doc => {
+          doc.text.splice(0, 0, ...randomString(20).split(''))
         })
-        cm.setValue(state.card.title.join(''))
-        const initialState = state
+        cm.setValue(doc.text.join(''))
+        const initialDoc = doc
 
         for (let t = 0; t < 10; t++) {
-          const textLength = state.card.title.length
+          const textLength = doc.text.length
           const index = Math.floor(Math.random() * textLength)
           // const from = cm.posFromIndex(index)
-          const editLength = randomInt(10)
+          const editLength = randomPositiveInt(10)
           if (Math.random() < 0.7) {
             // Add text
             const text = randomString(editLength)
-            state = Automerge.changeset(state, 'Insert', doc => {
-              text
-                .split('')
-                .forEach((c, i) => doc.card.title.splice(index + i, 0, c))
-            })
+            try {
+              doc = Automerge.change(doc, 'Insert', doc => {
+                doc.text.insertAt(index, ...text.split(''))
+              })
+            } catch (e) {
+              e.message += `\nOld text: "${doc.text.join(
+                ''
+              )}"\nIndex: ${index}\nInsert: "${text}"`
+              throw e
+            }
           } else {
-            state = Automerge.changeset(state, 'Delete', doc => {
-              doc.card.title.splice(index, editLength)
-            })
+            try {
+              doc = Automerge.change(doc, 'Delete', doc => {
+                doc.text.splice(index, editLength)
+              })
+            } catch (e) {
+              e.message += `\nOld text: "${doc.text.join(
+                ''
+              )}"\nIndex: ${index}\nDelete: ${editLength}`
+              throw e
+            }
           }
         }
-        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
-          initialState,
-          state,
-          getCodeMirror
-        )
+        const diff = Automerge.diff(initialDoc, doc)
+        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
 
-        assert.strictEqual(state.card.title.join(''), cm.getValue())
+        assert.strictEqual(doc.text.join(''), cm.getValue())
       })
     }
   })
@@ -120,9 +112,8 @@ describe('AutomergeCodeMirror', () => {
   describe('CodeMirror -> Automerge', () => {
     beforeEach(() => {
       cm.on('change', (cm, change) => {
-        state = AutomergeCodeMirror.applyCodeMirrorChangeToAutomerge(
-          state,
-          findList,
+        doc = AutomergeCodeMirror.applyCodeMirrorChangeToAutomerge(
+          doc,
           change,
           cm
         )
@@ -132,23 +123,23 @@ describe('AutomergeCodeMirror', () => {
     it('adds text', () => {
       const text = 'HELLO'
       cm.setValue(text)
-      assert.strictEqual(state.card.title.join(''), text)
+      assert.strictEqual(doc.text.join(''), text)
     })
 
     it('removes text', () => {
       cm.setValue('')
       cm.replaceRange('HELLO', { line: 0, ch: 0 })
       cm.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
-      assert.strictEqual(state.card.title.join(''), cm.getValue())
+      assert.strictEqual(doc.text.join(''), cm.getValue())
     })
 
     it('replaces a couple of lines', () => {
       const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
       cm.setValue(text)
-      assert.strictEqual(state.card.title.join(''), text)
+      assert.strictEqual(doc.text.join(''), text)
 
       cm.replaceRange('evil\nrats\n', { line: 1, ch: 0 }, { line: 3, ch: 0 })
-      assert.strictEqual(state.card.title.join(''), cm.getValue())
+      assert.strictEqual(doc.text.join(''), cm.getValue())
     })
 
     for (let n = 0; n < 10; n++) {
@@ -157,73 +148,58 @@ describe('AutomergeCodeMirror', () => {
         for (let t = 0; t < 10; t++) {
           monkeyType(cm)
         }
-        assert.strictEqual(state.card.title.join(''), cm.getValue())
+        assert.strictEqual(doc.text.join(''), cm.getValue())
       })
     }
   })
 
   describe('CodeMirror <-> Automerge <-> CodeMirror', () => {
     it('syncs', () => {
-      // Automerge wiring
-      const leftDocSet = new Automerge.DocSet()
-      const rightDocSet = new Automerge.DocSet()
-
-      let leftConnection, rightConnection
-      leftConnection = new Automerge.Connection(leftDocSet, message =>
-        rightConnection.receiveMsg(message)
-      )
-      rightConnection = new Automerge.Connection(rightDocSet, message =>
-        leftConnection.receiveMsg(message)
-      )
-      leftConnection.open()
-      rightConnection.open()
-
-      let docId = 'DOC'
-      // Initial doc
-      const leftDoc = Automerge.changeset(
-        Automerge.init(),
-        doc => (doc.text = 'hello'.split(''))
-      )
-
-      // CodeMirror wiring
-      const textObjectId = leftDoc.text._objectId
-      assert(textObjectId)
-      const findText = doc => doc.text
-
-      // Left CodeMirror
+      /// LEFT
       const leftCodeMirror = CodeMirror.fromTextArea(
         document.getElementById('left')
       )
-      leftCodeMirror.on(
-        'change',
-        AutomergeCodeMirror.updateAutomergeHandler(leftDocSet, docId, findText)
+      const leftWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
+      const left = new AutomergeCodeMirror.AutomergeCodeMirror(
+        leftCodeMirror,
+        leftWatchableDoc
       )
-      const getCodeMirrorLeft = objectId => {
-        if (objectId === textObjectId) return leftCodeMirror
-      }
-      leftDocSet.registerHandler(
-        AutomergeCodeMirror.updateCodeMirrorHandler(getCodeMirrorLeft)
-      )
+      left.connect()
 
-      // Right CodeMirror
+      /// RIGHT
+
       const rightCodeMirror = CodeMirror.fromTextArea(
-        document.getElementById('left')
+        document.getElementById('right')
       )
-      rightCodeMirror.on(
-        'change',
-        AutomergeCodeMirror.updateAutomergeHandler(rightDocSet, docId, findText)
+      const rightWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
+      const right = new AutomergeCodeMirror.AutomergeCodeMirror(
+        rightCodeMirror,
+        rightWatchableDoc
       )
-      const getCodeMirrorRight = objectId => {
-        if (objectId === textObjectId) return rightCodeMirror
-      }
-      rightDocSet.registerHandler(
-        AutomergeCodeMirror.updateCodeMirrorHandler(getCodeMirrorRight)
-      )
+      right.connect()
+
+      // NETWORK
+
+      let oldLeftDoc = leftWatchableDoc.get()
+      leftWatchableDoc.registerHandler(newLeftDoc => {
+        const changes = Automerge.getChanges(oldLeftDoc, newLeftDoc)
+        oldLeftDoc = newLeftDoc
+        if (changes.length === 0) return
+        rightWatchableDoc.applyChanges(changes)
+      })
+
+      let oldRightDoc = rightWatchableDoc.get()
+      rightWatchableDoc.registerHandler(newRightDoc => {
+        const changes = Automerge.getChanges(oldRightDoc, newRightDoc)
+        oldRightDoc = newRightDoc
+        if (changes.length === 0) return
+        leftWatchableDoc.applyChanges(changes)
+      })
 
       assert.strictEqual(leftCodeMirror.getValue(), '')
       assert.strictEqual(rightCodeMirror.getValue(), '')
 
-      leftDocSet.setDoc(docId, leftDoc)
+      leftCodeMirror.setValue('hello')
 
       assert.strictEqual(leftCodeMirror.getValue(), 'hello')
       assert.strictEqual(rightCodeMirror.getValue(), 'hello')
@@ -246,13 +222,30 @@ describe('AutomergeCodeMirror', () => {
       assert.strictEqual(rightCodeMirror.getValue(), 'hyo')
     })
   })
+
+  describe('Automerge Basics', () => {
+    it('syncs 2 docs', () => {
+      const l1 = Automerge.init()
+      const l2 = Automerge.change(l1, doc => {
+        doc.text = new Automerge.Text()
+        doc.text.insertAt(0, ...'HELLO'.split(''))
+      })
+      assert.deepEqual('HELLO', l2.text.join(''))
+
+      const l1c2 = Automerge.getChanges(l1, l2)
+
+      const r1 = Automerge.init()
+      const r2 = Automerge.applyChanges(r1, l1c2)
+      assert.deepEqual('HELLO', r2.text.join(''))
+    })
+  })
 })
 
 function monkeyType(cm) {
   const textLength = cm.getValue().length
   const index = Math.floor(Math.random() * textLength)
   const from = cm.posFromIndex(index)
-  const editLength = randomInt(10)
+  const editLength = randomPositiveInt(10)
   if (Math.random() < 0.7) {
     // Add text
     const text = randomString(editLength)
@@ -268,11 +261,11 @@ function randomString(len) {
     '0123456789\nABCDEF\nGHIJKLM\nNOPQRSTUVWXTZ\nabcde\nfghiklmnop\nqrstuvwxyz'
   let result = ''
   for (let i = 0; i < len; i++) {
-    const rnum = randomInt(chars.length)
+    const rnum = randomPositiveInt(chars.length)
     result += chars.substring(rnum, rnum + 1)
   }
   return result
 }
-function randomInt(max) {
-  return Math.floor(Math.random() * max)
+function randomPositiveInt(max) {
+  return Math.floor(Math.random() * max) + 1
 }

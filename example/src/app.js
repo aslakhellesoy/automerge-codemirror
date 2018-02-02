@@ -2,46 +2,29 @@ const Automerge = require('automerge')
 const CodeMirror = require('codemirror')
 const AutomergeCodeMirror = require('../../index')
 
-const leftDocSet = new Automerge.DocSet()
-const rightDocSet = new Automerge.DocSet()
-
-let leftConnection, rightConnection
-leftConnection = new Automerge.Connection(leftDocSet, message =>
-  rightConnection.receiveMsg(message)
+const leftDoc = Automerge.change(
+  Automerge.init(),
+  doc => (doc.text = new Automerge.Text())
 )
-rightConnection = new Automerge.Connection(rightDocSet, message =>
-  leftConnection.receiveMsg(message)
-)
-leftConnection.open()
-rightConnection.open()
-
-const leftDoc = Automerge.changeset(Automerge.init(), doc => (doc.text = []))
-
-const docId = 'DOC'
-leftDocSet.setDoc(docId, leftDoc)
-const findText = doc => doc.text
-const textObjectId = findText(leftDoc)._objectId
+const leftWatchableDoc = new Automerge.WatchableDoc(leftDoc)
 
 const leftCodeMirror = CodeMirror(document.getElementById('left'))
 leftCodeMirror.on(
   'change',
-  AutomergeCodeMirror.updateAutomergeHandler(leftDocSet, docId, findText)
+  AutomergeCodeMirror.updateAutomergeHandler(leftWatchableDoc)
 )
-leftDocSet.registerHandler(
-  AutomergeCodeMirror.updateCodeMirrorHandler(
-    objectId => (objectId === textObjectId ? leftCodeMirror : null)
-  )
+
+leftWatchableDoc.registerHandler(
+  AutomergeCodeMirror.updateCodeMirrorHandler(leftCodeMirror)
 )
 
 const rightCodeMirror = CodeMirror(document.getElementById('right'))
 rightCodeMirror.on(
   'change',
-  AutomergeCodeMirror.updateAutomergeHandler(rightDocSet, docId, findText)
+  AutomergeCodeMirror.updateAutomergeHandler(rightDoc)
 )
 rightDocSet.registerHandler(
-  AutomergeCodeMirror.updateCodeMirrorHandler(
-    objectId => (objectId === textObjectId ? rightCodeMirror : null)
-  )
+  AutomergeCodeMirror.updateCodeMirrorHandler(rightCodeMirror)
 )
 
 document

@@ -1,15 +1,14 @@
 const Automerge = require('automerge')
 
 /**
- * Applies a CodeMirror change to AutoMerge
+ * Applies a CodeMirror change to an AutoMerge Doc instance.
  *
  * @param doc the Automerge state before the change is applied
- * @param findText a function that will return the single-character string Array with the text
  * @param change the change object from CodeMirror. See https://codeMirror.net/doc/manual.html#events
  * @param codeMirror the CodeMirror instance
- * @returns {*}
+ * @returns updated doc
  */
-function applyCodeMirrorChangeToAutomerge(doc, findText, change, codeMirror) {
+function applyCodeMirrorChangeToAutomerge(doc, change, codeMirror) {
   const startPos = codeMirror.indexFromPos(change.from)
 
   const removedLines = change.removed
@@ -18,16 +17,17 @@ function applyCodeMirrorChangeToAutomerge(doc, findText, change, codeMirror) {
   const removedLength =
     removedLines.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
   if (removedLength > 0) {
-    doc = Automerge.changeset(doc, 'Delete', mdoc => {
-      findText(mdoc).splice(startPos, removedLength)
+    doc = Automerge.change(doc, 'Delete', mdoc => {
+      if (!mdoc.text) mdoc.text = new Automerge.Text()
+      mdoc.text.splice(startPos, removedLength)
     })
   }
 
   const addedText = addedLines.join('\n')
   if (addedText.length > 0) {
-    doc = Automerge.changeset(doc, 'Insert', doc => {
-      const text = findText(doc)
-      text.splice(startPos, 0, ...addedText.split(''))
+    doc = Automerge.change(doc, 'Insert', mdoc => {
+      if (!mdoc.text) mdoc.text = new Automerge.Text()
+      mdoc.text.splice(startPos, 0, ...addedText.split(''))
     })
   }
 
@@ -39,10 +39,15 @@ function applyCodeMirrorChangeToAutomerge(doc, findText, change, codeMirror) {
 
 const busyCodeMirrors = new Set()
 
-function applyAutomergeDiffToCodeMirror(oldDoc, newDoc, getCodeMirror) {
-  const diff = Automerge.diff(oldDoc, newDoc)
+/**
+ * Applies an Automerge Diff to a CodeMirror instance.
+ *
+ * @param diff the Automerge diff
+ * @param codeMirror the CodeMirror instance
+ * @returns Automerge.Doc
+ */
+function applyAutomergeDiffToCodeMirror(diff, codeMirror) {
   for (const d of diff) {
-    const codeMirror = getCodeMirror(d.objectId)
     if (codeMirror && !busyCodeMirrors.has(codeMirror)) {
       switch (d.action) {
         case 'insert': {
@@ -61,37 +66,40 @@ function applyAutomergeDiffToCodeMirror(oldDoc, newDoc, getCodeMirror) {
   }
 }
 
-function updateCodeMirrorHandler(getCodeMirror) {
-  const docs = new Map()
-
-  return (docId, doc) => {
-    const lastDoc = docs.get(docId) || Automerge.init()
-    docs.set(docId, doc)
-    applyAutomergeDiffToCodeMirror(lastDoc, doc, getCodeMirror)
-  }
-}
-
-function updateAutomergeHandler(docSet, docId, findText) {
+function updateAutomergeHandler(watchableDoc) {
   return (codeMirror, change) => {
     if (change.origin === 'automerge') return
     busyCodeMirrors.add(codeMirror)
-
-    const oldDoc = docSet.getDoc(docId)
-    if (!oldDoc) throw new Error(`docSet doesn't have a doc with id ${docId}`)
-    const newDoc = applyCodeMirrorChangeToAutomerge(
-      oldDoc,
-      findText,
-      change,
-      codeMirror
-    )
-    docSet.setDoc(docId, newDoc)
+    const oldDoc = watchableDoc.get()
+    const newDoc = applyCodeMirrorChangeToAutomerge(oldDoc, change, codeMirror)
+    watchableDoc.set(newDoc)
     busyCodeMirrors.delete(codeMirror)
   }
+}
+
+class AutomergeCodeMirror {
+  constructor(codeMirror, watchableDoc) {
+    this._codeMirror = codeMirror
+    this._watchableDoc = watchableDoc
+    this._oldDoc = watchableDoc.get()
+  }
+
+  connect() {
+    this._codeMirror.on('change', updateAutomergeHandler(this._watchableDoc))
+    // Get notified when the doc is modified from the outside
+    this._watchableDoc.registerHandler(newDoc => {
+      const diff = Automerge.diff(this._oldDoc, newDoc)
+      applyAutomergeDiffToCodeMirror(diff, this._codeMirror)
+      this._oldDoc = newDoc
+    })
+  }
+
+  disconnect() {}
 }
 
 module.exports = {
   applyCodeMirrorChangeToAutomerge,
   applyAutomergeDiffToCodeMirror,
-  updateCodeMirrorHandler,
   updateAutomergeHandler,
+  AutomergeCodeMirror,
 }
