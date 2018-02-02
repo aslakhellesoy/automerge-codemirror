@@ -9,7 +9,7 @@ describe('AutomergeCodeMirror', () => {
   let cm, doc
 
   beforeEach(() => {
-    cm = CodeMirror.fromTextArea(document.getElementById('editor'))
+    cm = CodeMirror(document.getElementById('editor'))
     doc = Automerge.init()
     doc = Automerge.change(doc, 'Create text', doc => {
       doc.text = new Automerge.Text()
@@ -156,9 +156,7 @@ describe('AutomergeCodeMirror', () => {
   describe('CodeMirror <-> Automerge <-> CodeMirror', () => {
     it('syncs', () => {
       /// LEFT
-      const leftCodeMirror = CodeMirror.fromTextArea(
-        document.getElementById('left')
-      )
+      const leftCodeMirror = CodeMirror(document.getElementById('left'))
       const leftWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
       const left = new AutomergeCodeMirror.AutomergeCodeMirror(
         leftCodeMirror,
@@ -168,9 +166,7 @@ describe('AutomergeCodeMirror', () => {
 
       /// RIGHT
 
-      const rightCodeMirror = CodeMirror.fromTextArea(
-        document.getElementById('right')
-      )
+      const rightCodeMirror = CodeMirror(document.getElementById('right'))
       const rightWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
       const right = new AutomergeCodeMirror.AutomergeCodeMirror(
         rightCodeMirror,

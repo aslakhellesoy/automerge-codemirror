@@ -2,9 +2,9 @@
 const { JSDOM } = require('jsdom')
 const dom = new JSDOM(
   '<html><body>' +
-    '<textarea id="editor"></textarea>' +
-    '<textarea id="left"></textarea>' +
-    '<textarea id="right"></textarea>' +
+    '<div id="editor"></div>' +
+    '<div id="left"></div>' +
+    '<div id="right"></div>' +
     '</body></html>'
 )
 global.window = dom.window

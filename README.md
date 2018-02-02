@@ -2,12 +2,13 @@
 
 [![Build Status](https://travis-ci.org/aslakhellesoy/automerge-codemirror.svg?branch=master)](https://travis-ci.org/aslakhellesoy/automerge-codemirror)
 
-Automerge-CodeMirror links a CodeMirror instance to an `Array` of single-character strings in an Automerge document.
+Automerge-CodeMirror links a CodeMirror instance to a `Automerge.Text` object. Simply create an `Automerge.Doc` and
+Automerge-CodeMirror will link to the doc's `text` property.
 
-When the CodeMirror text is changed, the linked `Array` in the Automerge document is updated via the `Automerge#change`
+When the CodeMirror text is changed, the linked `Automerge.Text` in the Automerge document is updated via the `Automerge#change`
 method.
 
-When the `Array` in the Automerge document is changed, CodeMirror's value is updated via the `CodeMirror#replaceRange`
+When the `Automerge.Text` in the Automerge document is changed (by syncing with external documents), CodeMirror's value is updated via the `CodeMirror#replaceRange`
 method.
 
 ## Demo

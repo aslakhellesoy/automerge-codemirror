@@ -37,8 +37,6 @@ function applyCodeMirrorChangeToAutomerge(doc, change, codeMirror) {
   return doc
 }
 
-const busyCodeMirrors = new Set()
-
 /**
  * Applies an Automerge Diff to a CodeMirror instance.
  *
@@ -47,20 +45,19 @@ const busyCodeMirrors = new Set()
  * @returns Automerge.Doc
  */
 function applyAutomergeDiffToCodeMirror(diff, codeMirror) {
+  if (codeMirror.automergeBusy) return
   for (const d of diff) {
-    if (codeMirror && !busyCodeMirrors.has(codeMirror)) {
-      switch (d.action) {
-        case 'insert': {
-          const fromPos = codeMirror.posFromIndex(d.index)
-          codeMirror.replaceRange(d.value, fromPos, null, 'automerge')
-          break
-        }
-        case 'remove': {
-          const fromPos = codeMirror.posFromIndex(d.index)
-          const toPos = codeMirror.posFromIndex(d.index + 1)
-          codeMirror.replaceRange('', fromPos, toPos, 'automerge')
-          break
-        }
+    switch (d.action) {
+      case 'insert': {
+        const fromPos = codeMirror.posFromIndex(d.index)
+        codeMirror.replaceRange(d.value, fromPos, null, 'automerge')
+        break
+      }
+      case 'remove': {
+        const fromPos = codeMirror.posFromIndex(d.index)
+        const toPos = codeMirror.posFromIndex(d.index + 1)
+        codeMirror.replaceRange('', fromPos, toPos, 'automerge')
+        break
       }
     }
   }
@@ -69,11 +66,11 @@ function applyAutomergeDiffToCodeMirror(diff, codeMirror) {
 function updateAutomergeHandler(watchableDoc) {
   return (codeMirror, change) => {
     if (change.origin === 'automerge') return
-    busyCodeMirrors.add(codeMirror)
+    codeMirror.automergeBusy = true
     const oldDoc = watchableDoc.get()
     const newDoc = applyCodeMirrorChangeToAutomerge(oldDoc, change, codeMirror)
     watchableDoc.set(newDoc)
-    busyCodeMirrors.delete(codeMirror)
+    codeMirror.automergeBusy = false
   }
 }
 
@@ -85,6 +82,7 @@ class AutomergeCodeMirror {
   }
 
   connect() {
+    console.log('CONNECT')
     this._codeMirror.on('change', updateAutomergeHandler(this._watchableDoc))
     // Get notified when the doc is modified from the outside
     this._watchableDoc.registerHandler(newDoc => {
