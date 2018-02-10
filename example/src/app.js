@@ -21,7 +21,7 @@ const right = new AutomergeCodeMirror.AutomergeCodeMirror(
 )
 right.connect()
 
-// NETWORK
+// SIMULATE NETWORK
 
 let oldLeftDoc = leftWatchableDoc.get()
 leftWatchableDoc.registerHandler(newLeftDoc => {
@@ -38,17 +38,3 @@ rightWatchableDoc.registerHandler(newRightDoc => {
   if (changes.length === 0) return
   leftWatchableDoc.applyChanges(changes)
 })
-
-// document
-//   .querySelector('#left-connected')
-//   .addEventListener(
-//     'change',
-//     e => (e.target.checked ? leftConnection.open() : leftConnection.close())
-//   )
-//
-// document
-//   .querySelector('#right-connected')
-//   .addEventListener(
-//     'change',
-//     e => (e.target.checked ? rightConnection.open() : rightConnection.close())
-//   )

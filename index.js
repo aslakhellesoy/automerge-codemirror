@@ -42,7 +42,6 @@ function applyCodeMirrorChangeToAutomerge(doc, change, codeMirror) {
  *
  * @param diff the Automerge diff
  * @param codeMirror the CodeMirror instance
- * @returns Automerge.Doc
  */
 function applyAutomergeDiffToCodeMirror(diff, codeMirror) {
   if (codeMirror.automergeBusy) return
@@ -82,7 +81,6 @@ class AutomergeCodeMirror {
   }
 
   connect() {
-    console.log('CONNECT')
     this._codeMirror.on('change', updateAutomergeHandler(this._watchableDoc))
     // Get notified when the doc is modified from the outside
     this._watchableDoc.registerHandler(newDoc => {
