@@ -8,11 +8,15 @@ const Automerge = require('automerge')
  * @param codeMirror the CodeMirror instance
  * @returns updated doc
  */
+// TODO: Design this to be run inside an Automerge.change callback, when we already 
+// know what Automerge doc (text) property to apply changes to
 function applyCodeMirrorChangeToAutomerge(doc, change, codeMirror) {
   const startPos = codeMirror.indexFromPos(change.from)
 
   const removedLines = change.removed
   const addedLines = change.text
+
+  // TODO: Do it all in one change?
 
   const removedLength =
     removedLines.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
