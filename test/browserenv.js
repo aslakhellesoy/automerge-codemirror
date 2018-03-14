@@ -3,8 +3,6 @@ const { JSDOM } = require('jsdom')
 const dom = new JSDOM(
   '<html><body>' +
     '<div id="editor"></div>' +
-    '<div id="left"></div>' +
-    '<div id="right"></div>' +
     '</body></html>'
 )
 global.window = dom.window

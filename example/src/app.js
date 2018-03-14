@@ -30,7 +30,6 @@ function createCodeMirrorOnDocChange(watchableDoc, domId) {
     watchableDoc.unregisterHandler(handler)
     if (called) return
     called = true
-    console.log('OFF', domId)
     const $e = document.getElementById(domId)
     const codeMirror = CodeMirror($e)
     const acm = new AutomergeCodeMirror.AutomergeCodeMirror(
@@ -40,7 +39,6 @@ function createCodeMirrorOnDocChange(watchableDoc, domId) {
     )
     acm.start()
   }
-  console.log('ON', domId)
   watchableDoc.registerHandler(handler)
 }
 

@@ -1,7 +1,7 @@
 const Automerge = require('automerge')
 
 /**
- * Applies a CodeMirror change to an Array or Automerge.Text instance.
+ * Applies a CodeMirror change to an Automerge.Text instance.
  *
  * @param text the text to modify
  * @param change the change object from CodeMirror. See https://codeMirror.net/doc/manual.html#events
@@ -57,7 +57,7 @@ function applyAutomergeDiffToCodeMirror(diff, textObjectId, codeMirror) {
   }
 }
 
-function updateAutomergeHandler(watchableDoc, getDocText) {
+function makeUpdateAutomergeHandler(watchableDoc, getDocText) {
   return (codeMirror, change) => {
     if (change.origin === 'automerge') return
     codeMirror.automergeBusy = true
@@ -78,27 +78,35 @@ class AutomergeCodeMirror {
     this._getDocText = getDocText
     this._oldDoc = watchableDoc.get()
     this._textObjectId = getDocText(this._oldDoc)._objectId
-  }
 
-  start() {
-    this._codeMirror.on(
-      'change',
-      updateAutomergeHandler(this._watchableDoc, this._getDocText)
-    )
-    // Get notified when the doc is modified from the outside
-    this._watchableDoc.registerHandler(newDoc => {
+    this._updateCodeMirrorHandler = newDoc => {
       const diff = Automerge.diff(this._oldDoc, newDoc)
       applyAutomergeDiffToCodeMirror(diff, this._textObjectId, this._codeMirror)
       this._oldDoc = newDoc
-    })
+    }
+
+    this._updateAutomergeHandler = makeUpdateAutomergeHandler(
+      watchableDoc,
+      getDocText
+    )
   }
 
-  stop() {}
+  start() {
+    // When CodeMirror is modified as the result of typing, apply changes to AutoMerge
+    this._codeMirror.on('change', this._updateAutomergeHandler)
+    // When the doc is modified from the outside, apply the diff to CodeMirror
+    this._watchableDoc.registerHandler(this._updateCodeMirrorHandler)
+  }
+
+  stop() {
+    this._watchableDoc.unregisterHandler(this._updateCodeMirrorHandler)
+    this._codeMirror.off('change', this._updateAutomergeHandler)
+  }
 }
 
 module.exports = {
   applyCodeMirrorChangeToArray,
   applyAutomergeDiffToCodeMirror,
-  updateAutomergeHandler,
+  updateAutomergeHandler: makeUpdateAutomergeHandler,
   AutomergeCodeMirror,
 }
