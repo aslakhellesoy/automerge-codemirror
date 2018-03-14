@@ -6,7 +6,7 @@ const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
 
 describe('AutomergeCodeMirror', () => {
-  let cm, doc
+  let cm, doc, textObjectId
 
   beforeEach(() => {
     cm = CodeMirror(document.getElementById('editor'))
@@ -14,6 +14,8 @@ describe('AutomergeCodeMirror', () => {
     doc = Automerge.change(doc, 'Create text', doc => {
       doc.text = new Automerge.Text()
     })
+    textObjectId = doc.text._objectId
+    assert(textObjectId)
   })
 
   describe('Automerge -> CodeMirror', () => {
@@ -23,7 +25,7 @@ describe('AutomergeCodeMirror', () => {
       })
 
       const diff = Automerge.diff(doc, newDoc)
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, textObjectId, cm)
 
       assert.strictEqual(cm.getValue(), newDoc.text.join(''))
     })
@@ -38,7 +40,7 @@ describe('AutomergeCodeMirror', () => {
       })
 
       const diff = Automerge.diff(initialDoc, doc)
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, textObjectId, cm)
 
       assert.strictEqual(cm.getValue(), doc.text.join(''))
     })
@@ -57,7 +59,7 @@ describe('AutomergeCodeMirror', () => {
       })
 
       const diff = Automerge.diff(initialDoc, doc)
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
+      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, textObjectId, cm)
 
       assert.strictEqual(cm.getValue(), doc.text.join(''))
     })
@@ -102,7 +104,11 @@ describe('AutomergeCodeMirror', () => {
           }
         }
         const diff = Automerge.diff(initialDoc, doc)
-        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, cm)
+        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
+          diff,
+          textObjectId,
+          cm
+        )
 
         assert.strictEqual(doc.text.join(''), cm.getValue())
       })
@@ -112,11 +118,13 @@ describe('AutomergeCodeMirror', () => {
   describe('CodeMirror -> Automerge', () => {
     beforeEach(() => {
       cm.on('change', (cm, change) => {
-        doc = AutomergeCodeMirror.applyCodeMirrorChangeToAutomerge(
-          doc,
-          change,
-          cm
-        )
+        doc = Automerge.change(doc, mdoc => {
+          AutomergeCodeMirror.applyCodeMirrorChangeToArray(
+            mdoc.text,
+            change,
+            cm
+          )
+        })
       })
     })
 
@@ -151,89 +159,6 @@ describe('AutomergeCodeMirror', () => {
         assert.strictEqual(doc.text.join(''), cm.getValue())
       })
     }
-  })
-
-  describe('CodeMirror <-> Automerge <-> CodeMirror', () => {
-    it('syncs', () => {
-      /// LEFT
-      const leftCodeMirror = CodeMirror(document.getElementById('left'))
-      const leftWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
-      const left = new AutomergeCodeMirror.AutomergeCodeMirror(
-        leftCodeMirror,
-        leftWatchableDoc
-      )
-      left.connect()
-
-      /// RIGHT
-
-      const rightCodeMirror = CodeMirror(document.getElementById('right'))
-      const rightWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
-      const right = new AutomergeCodeMirror.AutomergeCodeMirror(
-        rightCodeMirror,
-        rightWatchableDoc
-      )
-      right.connect()
-
-      // NETWORK
-
-      let oldLeftDoc = leftWatchableDoc.get()
-      leftWatchableDoc.registerHandler(newLeftDoc => {
-        const changes = Automerge.getChanges(oldLeftDoc, newLeftDoc)
-        oldLeftDoc = newLeftDoc
-        if (changes.length === 0) return
-        rightWatchableDoc.applyChanges(changes)
-      })
-
-      let oldRightDoc = rightWatchableDoc.get()
-      rightWatchableDoc.registerHandler(newRightDoc => {
-        const changes = Automerge.getChanges(oldRightDoc, newRightDoc)
-        oldRightDoc = newRightDoc
-        if (changes.length === 0) return
-        leftWatchableDoc.applyChanges(changes)
-      })
-
-      assert.strictEqual(leftCodeMirror.getValue(), '')
-      assert.strictEqual(rightCodeMirror.getValue(), '')
-
-      leftCodeMirror.setValue('hello')
-
-      assert.strictEqual(leftCodeMirror.getValue(), 'hello')
-      assert.strictEqual(rightCodeMirror.getValue(), 'hello')
-
-      leftCodeMirror.replaceRange(
-        'x',
-        leftCodeMirror.posFromIndex(1),
-        leftCodeMirror.posFromIndex(3)
-      )
-
-      assert.strictEqual(leftCodeMirror.getValue(), 'hxlo')
-      assert.strictEqual(rightCodeMirror.getValue(), 'hxlo')
-
-      rightCodeMirror.replaceRange(
-        'y',
-        rightCodeMirror.posFromIndex(1),
-        rightCodeMirror.posFromIndex(3)
-      )
-      assert.strictEqual(leftCodeMirror.getValue(), 'hyo')
-      assert.strictEqual(rightCodeMirror.getValue(), 'hyo')
-    })
-  })
-
-  describe('Automerge Basics', () => {
-    it('syncs 2 docs', () => {
-      const l1 = Automerge.init()
-      const l2 = Automerge.change(l1, doc => {
-        doc.text = new Automerge.Text()
-        doc.text.insertAt(0, ...'HELLO'.split(''))
-      })
-      assert.deepEqual('HELLO', l2.text.join(''))
-
-      const l1c2 = Automerge.getChanges(l1, l2)
-
-      const r1 = Automerge.init()
-      const r2 = Automerge.applyChanges(r1, l1c2)
-      assert.deepEqual('HELLO', r2.text.join(''))
-    })
   })
 })
 

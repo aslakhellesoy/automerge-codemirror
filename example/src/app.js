@@ -2,24 +2,8 @@ const Automerge = require('automerge')
 const CodeMirror = require('codemirror')
 const AutomergeCodeMirror = require('../../index')
 
-/// LEFT
-const leftCodeMirror = CodeMirror(document.getElementById('left'))
 const leftWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
-const left = new AutomergeCodeMirror.AutomergeCodeMirror(
-  leftCodeMirror,
-  leftWatchableDoc
-)
-left.connect()
-
-/// RIGHT
-
-const rightCodeMirror = CodeMirror(document.getElementById('right'))
 const rightWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
-const right = new AutomergeCodeMirror.AutomergeCodeMirror(
-  rightCodeMirror,
-  rightWatchableDoc
-)
-right.connect()
 
 // SIMULATE NETWORK
 
@@ -38,3 +22,35 @@ rightWatchableDoc.registerHandler(newRightDoc => {
   if (changes.length === 0) return
   leftWatchableDoc.applyChanges(changes)
 })
+
+// CREATE CODEMIRROR WHEN TEXT FIRST UPDATES
+function createCodeMirrorOnDocChange(watchableDoc, domId) {
+  let called = false
+  function handler() {
+    watchableDoc.unregisterHandler(handler)
+    if (called) return
+    called = true
+    console.log('OFF', domId)
+    const $e = document.getElementById(domId)
+    const codeMirror = CodeMirror($e)
+    const acm = new AutomergeCodeMirror.AutomergeCodeMirror(
+      codeMirror,
+      leftWatchableDoc,
+      doc => doc.text
+    )
+    acm.start()
+  }
+  console.log('ON', domId)
+  watchableDoc.registerHandler(handler)
+}
+
+createCodeMirrorOnDocChange(rightWatchableDoc, 'right')
+createCodeMirrorOnDocChange(leftWatchableDoc, 'left')
+
+// INJECT TEXT
+rightWatchableDoc.set(
+  Automerge.change(
+    rightWatchableDoc.get(),
+    doc => (doc.text = new Automerge.Text())
+  )
+)

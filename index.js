@@ -1,55 +1,46 @@
 const Automerge = require('automerge')
 
 /**
- * Applies a CodeMirror change to an AutoMerge Doc instance.
+ * Applies a CodeMirror change to an Array or Automerge.Text instance.
  *
- * @param doc the Automerge state before the change is applied
+ * @param text the text to modify
  * @param change the change object from CodeMirror. See https://codeMirror.net/doc/manual.html#events
  * @param codeMirror the CodeMirror instance
  * @returns updated doc
  */
-// TODO: Design this to be run inside an Automerge.change callback, when we already 
-// know what Automerge doc (text) property to apply changes to
-function applyCodeMirrorChangeToAutomerge(doc, change, codeMirror) {
+function applyCodeMirrorChangeToArray(text, change, codeMirror) {
   const startPos = codeMirror.indexFromPos(change.from)
 
   const removedLines = change.removed
   const addedLines = change.text
 
-  // TODO: Do it all in one change?
-
   const removedLength =
     removedLines.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
   if (removedLength > 0) {
-    doc = Automerge.change(doc, 'Delete', mdoc => {
-      if (!mdoc.text) mdoc.text = new Automerge.Text()
-      mdoc.text.splice(startPos, removedLength)
-    })
+    text.splice(startPos, removedLength)
   }
 
   const addedText = addedLines.join('\n')
   if (addedText.length > 0) {
-    doc = Automerge.change(doc, 'Insert', mdoc => {
-      if (!mdoc.text) mdoc.text = new Automerge.Text()
-      mdoc.text.splice(startPos, 0, ...addedText.split(''))
-    })
+    text.splice(startPos, 0, ...addedText.split(''))
   }
 
   if (change.next) {
-    doc = applyCodeMirrorChangeToAutomerge(doc, change.next, codeMirror)
+    applyCodeMirrorChangeToArray(text, change.next, codeMirror)
   }
-  return doc
 }
 
 /**
  * Applies an Automerge Diff to a CodeMirror instance.
  *
  * @param diff the Automerge diff
+ * @param textObjectId the _objectId of the text property "linked" to the CodeMirror instance
  * @param codeMirror the CodeMirror instance
  */
-function applyAutomergeDiffToCodeMirror(diff, codeMirror) {
+function applyAutomergeDiffToCodeMirror(diff, textObjectId, codeMirror) {
   if (codeMirror.automergeBusy) return
   for (const d of diff) {
+    if (d.obj !== textObjectId) continue
     switch (d.action) {
       case 'insert': {
         const fromPos = codeMirror.posFromIndex(d.index)
@@ -66,39 +57,47 @@ function applyAutomergeDiffToCodeMirror(diff, codeMirror) {
   }
 }
 
-function updateAutomergeHandler(watchableDoc) {
+function updateAutomergeHandler(watchableDoc, getDocText) {
   return (codeMirror, change) => {
     if (change.origin === 'automerge') return
     codeMirror.automergeBusy = true
     const oldDoc = watchableDoc.get()
-    const newDoc = applyCodeMirrorChangeToAutomerge(oldDoc, change, codeMirror)
+    const newDoc = Automerge.change(oldDoc, mdoc => {
+      const text = getDocText(mdoc)
+      applyCodeMirrorChangeToArray(text, change, codeMirror)
+    })
     watchableDoc.set(newDoc)
     codeMirror.automergeBusy = false
   }
 }
 
 class AutomergeCodeMirror {
-  constructor(codeMirror, watchableDoc) {
+  constructor(codeMirror, watchableDoc, getDocText) {
     this._codeMirror = codeMirror
     this._watchableDoc = watchableDoc
+    this._getDocText = getDocText
     this._oldDoc = watchableDoc.get()
+    this._textObjectId = getDocText(this._oldDoc)._objectId
   }
 
-  connect() {
-    this._codeMirror.on('change', updateAutomergeHandler(this._watchableDoc))
+  start() {
+    this._codeMirror.on(
+      'change',
+      updateAutomergeHandler(this._watchableDoc, this._getDocText)
+    )
     // Get notified when the doc is modified from the outside
     this._watchableDoc.registerHandler(newDoc => {
       const diff = Automerge.diff(this._oldDoc, newDoc)
-      applyAutomergeDiffToCodeMirror(diff, this._codeMirror)
+      applyAutomergeDiffToCodeMirror(diff, this._textObjectId, this._codeMirror)
       this._oldDoc = newDoc
     })
   }
 
-  disconnect() {}
+  stop() {}
 }
 
 module.exports = {
-  applyCodeMirrorChangeToAutomerge,
+  applyCodeMirrorChangeToArray,
   applyAutomergeDiffToCodeMirror,
   updateAutomergeHandler,
   AutomergeCodeMirror,
