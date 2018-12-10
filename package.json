@@ -23,6 +23,7 @@
     "eslint": "^5.10.0",
     "eslint-config-prettier": "^3.3.0",
     "eslint-plugin-prettier": "^3.0.0",
+    "husky": "^1.2.0",
     "jsdom": "^13.0.0",
     "mocha": "^5.0.4",
     "nyc": "^13.1.0",
