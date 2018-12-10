@@ -6,157 +6,121 @@ const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
 
 describe('AutomergeCodeMirror', () => {
-  let cm, doc, textObjectId
+  let codemirror, doc, watchableDoc, acm
 
   beforeEach(() => {
-    cm = CodeMirror(document.getElementById('editor'))
-    doc = Automerge.init()
-    doc = Automerge.change(doc, 'Create text', doc => {
+    doc = Automerge.change(Automerge.init(), doc => {
       doc.text = new Automerge.Text()
     })
-    textObjectId = doc.text._objectId
-    assert(textObjectId)
+    watchableDoc = new Automerge.WatchableDoc(doc)
+    const getDocText = doc => doc.text
+
+    codemirror = CodeMirror(document.getElementById('editor'))
+    acm = new AutomergeCodeMirror(codemirror, watchableDoc, getDocText)
+    acm.start()
   })
 
   describe('Automerge -> CodeMirror', () => {
     it('adds text', () => {
-      const newDoc = Automerge.change(doc, 'Insert', doc => {
-        doc.text.insertAt(0, ...'HELLO'.split(''))
+      doc = Automerge.change(doc, editableDoc => {
+        editableDoc.text.insertAt(0, ...'HELLO'.split(''))
       })
+      watchableDoc.set(doc)
 
-      const diff = Automerge.diff(doc, newDoc)
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, textObjectId, cm)
-
-      assert.strictEqual(cm.getValue(), newDoc.text.join(''))
+      assert.strictEqual(codemirror.getValue(), doc.text.join(''))
     })
 
     it('removes text', () => {
-      const initialDoc = doc
-      doc = Automerge.change(doc, 'Insert', doc => {
-        doc.text.splice(0, 0, ...'HELLO'.split(''))
+      doc = Automerge.change(doc, editableDoc => {
+        editableDoc.text.splice(0, 0, ...'HELLO'.split(''))
       })
-      doc = Automerge.change(doc, 'Delete', doc => {
-        doc.text.splice(0, 5)
+      doc = Automerge.change(doc, editableDoc => {
+        editableDoc.text.splice(0, 5)
       })
 
-      const diff = Automerge.diff(initialDoc, doc)
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, textObjectId, cm)
+      watchableDoc.set(doc)
 
-      assert.strictEqual(cm.getValue(), doc.text.join(''))
+      assert.strictEqual(codemirror.getValue(), doc.text.join(''))
     })
 
     it('replaces a couple of lines', () => {
-      doc = Automerge.change(doc, 'Insert', doc => {
+      doc = Automerge.change(doc, editableDoc => {
         const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
-        doc.text.splice(0, 0, ...text.split(''))
+        editableDoc.text.splice(0, 0, ...text.split(''))
       })
-      cm.setValue(doc.text.join(''))
-      const initialDoc = doc
 
-      doc = Automerge.change(initialDoc, 'Replace', doc => {
+      doc = Automerge.change(doc, 'Replace', doc => {
         const replacement = 'evil\nrats\n'
         doc.text.splice(6, 11, replacement)
       })
 
-      const diff = Automerge.diff(initialDoc, doc)
-      AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(diff, textObjectId, cm)
+      watchableDoc.set(doc)
 
-      assert.strictEqual(cm.getValue(), doc.text.join(''))
+      assert.strictEqual(
+        codemirror.getValue(),
+        'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
+      )
     })
 
-    for (let n = 0; n < 0; n++) {
+    for (let n = 0; n < 10; n++) {
       it(`works with random edits (fuzz test ${n})`, () => {
-        doc = Automerge.change(doc, 'Insert', doc => {
-          doc.text.splice(0, 0, ...randomString(20).split(''))
+        doc = Automerge.change(doc, editableDoc => {
+          editableDoc.text.splice(0, 0, ...randomString(20).split(''))
         })
-        cm.setValue(doc.text.join(''))
-        const initialDoc = doc
-
         for (let t = 0; t < 10; t++) {
-          const textLength = doc.text.length
-          const index = Math.floor(Math.random() * textLength)
-          // const from = cm.posFromIndex(index)
-          const editLength = randomPositiveInt(10)
-          if (Math.random() < 0.7) {
-            // Add text
-            const text = randomString(editLength)
-            try {
-              doc = Automerge.change(doc, 'Insert', doc => {
-                doc.text.insertAt(index, ...text.split(''))
-              })
-            } catch (e) {
-              e.message += `\nOld text: "${doc.text.join(
-                ''
-              )}"\nIndex: ${index}\nInsert: "${text}"`
-              throw e
-            }
-          } else {
-            try {
-              doc = Automerge.change(doc, 'Delete', doc => {
-                doc.text.splice(index, editLength)
-              })
-            } catch (e) {
-              e.message += `\nOld text: "${doc.text.join(
-                ''
-              )}"\nIndex: ${index}\nDelete: ${editLength}`
-              throw e
-            }
-          }
+          doc = monkeyModify(doc)
         }
-        const diff = Automerge.diff(initialDoc, doc)
-        AutomergeCodeMirror.applyAutomergeDiffToCodeMirror(
-          diff,
-          textObjectId,
-          cm
-        )
 
-        assert.strictEqual(doc.text.join(''), cm.getValue())
+        watchableDoc.set(doc)
+        assert.strictEqual(doc.text.join(''), codemirror.getValue())
       })
     }
   })
 
   describe('CodeMirror -> Automerge', () => {
-    beforeEach(() => {
-      cm.on('change', (cm, change) => {
-        doc = Automerge.change(doc, mdoc => {
-          AutomergeCodeMirror.applyCodeMirrorChangeToArray(
-            mdoc.text,
-            change,
-            cm
-          )
-        })
-      })
-    })
-
     it('adds text', () => {
       const text = 'HELLO'
-      cm.setValue(text)
+      codemirror.setValue(text)
+
+      doc = watchableDoc.get()
       assert.strictEqual(doc.text.join(''), text)
     })
 
     it('removes text', () => {
-      cm.setValue('')
-      cm.replaceRange('HELLO', { line: 0, ch: 0 })
-      cm.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
-      assert.strictEqual(doc.text.join(''), cm.getValue())
+      codemirror.setValue('')
+      codemirror.replaceRange('HELLO', { line: 0, ch: 0 })
+      codemirror.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
+
+      doc = watchableDoc.get()
+      assert.strictEqual(doc.text.join(''), codemirror.getValue())
     })
 
     it('replaces a couple of lines', () => {
       const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
-      cm.setValue(text)
-      assert.strictEqual(doc.text.join(''), text)
+      codemirror.setValue(text)
 
-      cm.replaceRange('evil\nrats\n', { line: 1, ch: 0 }, { line: 3, ch: 0 })
-      assert.strictEqual(doc.text.join(''), cm.getValue())
+      codemirror.replaceRange(
+        'evil\nrats\n',
+        { line: 1, ch: 0 },
+        { line: 3, ch: 0 }
+      )
+
+      doc = watchableDoc.get()
+      assert.strictEqual(
+        doc.text.join(''),
+        'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
+      )
     })
 
     for (let n = 0; n < 10; n++) {
       it(`works with random edits (fuzz test ${n})`, () => {
-        cm.setValue(randomString(20))
+        codemirror.setValue(randomString(20))
         for (let t = 0; t < 10; t++) {
-          monkeyType(cm)
+          monkeyType(codemirror)
         }
-        assert.strictEqual(doc.text.join(''), cm.getValue())
+
+        doc = watchableDoc.get()
+        assert.strictEqual(doc.text.join(''), codemirror.getValue())
       })
     }
   })
@@ -172,11 +136,31 @@ function monkeyType(cm) {
     const text = randomString(editLength)
     cm.replaceRange(text, cm.posFromIndex(index))
   } else {
-    const endIndex = Math.max(index + editLength, textLength - 1)
+    const endIndex = Math.max(index + editLength, textLength - index)
     const to = cm.posFromIndex(endIndex)
     cm.replaceRange('', from, to)
   }
 }
+
+function monkeyModify(doc) {
+  const textLength = doc.text.length
+  const index = Math.floor(Math.random() * textLength)
+  // const from = cm.posFromIndex(index)
+  const editLength = randomPositiveInt(10)
+  if (Math.random() < 0.7) {
+    // Add text
+    doc = Automerge.change(doc, editableDoc => {
+      editableDoc.text.splice(index, 0, ...randomString(editLength).split(''))
+    })
+  } else {
+    const endIndex = Math.min(index + editLength, textLength - index)
+    doc = Automerge.change(doc, editableDoc => {
+      editableDoc.text.splice(index, endIndex)
+    })
+  }
+  return doc
+}
+
 function randomString(len) {
   const chars =
     '0123456789\nABCDEF\nGHIJKLM\nNOPQRSTUVWXTZ\nabcde\nfghiklmnop\nqrstuvwxyz'
@@ -187,6 +171,7 @@ function randomString(len) {
   }
   return result
 }
+
 function randomPositiveInt(max) {
   return Math.floor(Math.random() * max) + 1
 }

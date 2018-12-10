@@ -57,20 +57,6 @@ function applyAutomergeDiffToCodeMirror(diff, textObjectId, codeMirror) {
   }
 }
 
-function makeUpdateAutomergeHandler(watchableDoc, getDocText) {
-  return (codeMirror, change) => {
-    if (change.origin === 'automerge') return
-    codeMirror.automergeBusy = true
-    const oldDoc = watchableDoc.get()
-    const newDoc = Automerge.change(oldDoc, mdoc => {
-      const text = getDocText(mdoc)
-      applyCodeMirrorChangeToArray(text, change, codeMirror)
-    })
-    watchableDoc.set(newDoc)
-    codeMirror.automergeBusy = false
-  }
-}
-
 class AutomergeCodeMirror {
   constructor(codeMirror, watchableDoc, getDocText) {
     this._codeMirror = codeMirror
@@ -84,10 +70,17 @@ class AutomergeCodeMirror {
       this._oldDoc = newDoc
     }
 
-    this._updateAutomergeHandler = makeUpdateAutomergeHandler(
-      watchableDoc,
-      getDocText
-    )
+    this._updateAutomergeHandler = (codeMirror, change) => {
+      if (change.origin === 'automerge') return
+      codeMirror.automergeBusy = true
+      const oldDoc = watchableDoc.get()
+      const newDoc = Automerge.change(oldDoc, mdoc => {
+        const text = getDocText(mdoc)
+        applyCodeMirrorChangeToArray(text, change, codeMirror)
+      })
+      watchableDoc.set(newDoc)
+      codeMirror.automergeBusy = false
+    }
   }
 
   start() {
@@ -103,8 +96,4 @@ class AutomergeCodeMirror {
   }
 }
 
-module.exports = {
-  applyCodeMirrorChangeToArray,
-  applyAutomergeDiffToCodeMirror,
-  AutomergeCodeMirror,
-}
+module.exports = AutomergeCodeMirror

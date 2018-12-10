@@ -32,7 +32,7 @@ function createCodeMirrorOnDocChange(watchableDoc, domId) {
     called = true
     const $e = document.getElementById(domId)
     const codeMirror = CodeMirror($e)
-    const acm = new AutomergeCodeMirror.AutomergeCodeMirror(
+    const acm = new AutomergeCodeMirror(
       codeMirror,
       leftWatchableDoc,
       doc => doc.text
