@@ -17,9 +17,6 @@ rightConnection = new Automerge.Connection(rightDocSet, msg =>
 )
 rightConnection.open()
 
-// leftDocSet.setDoc(docId, Automerge.init())
-// // rightDocSet.setDoc(docId, Automerge.init())
-
 // CREATE CODEMIRROR WHEN TEXT FIRST UPDATES
 function createCodeMirrorOnDocChange(docSet, docId, domId) {
   let called = false

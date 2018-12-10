@@ -20,15 +20,23 @@
     "codemirror": "^5.35.0"
   },
   "devDependencies": {
-    "eslint": "^5.10.0",
-    "eslint-config-prettier": "^3.3.0",
-    "eslint-plugin-prettier": "^3.0.0",
     "husky": "^1.2.0",
     "jsdom": "^13.0.0",
     "mocha": "^5.0.4",
     "nyc": "^13.1.0",
     "prettier": "^1.11.1",
+    "pretty-quick": "^1.8.0",
     "webpack": "^4.1.1",
     "webpack-cli": "^3.1.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "semi": false,
+    "singleQuote": true
   }
 }
