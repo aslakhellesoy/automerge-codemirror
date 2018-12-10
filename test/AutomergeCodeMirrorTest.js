@@ -5,18 +5,21 @@ const CodeMirror = require('codemirror')
 const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
 
+let docId = 'doc-id'
+
 describe('AutomergeCodeMirror', () => {
-  let codemirror, doc, watchableDoc, acm
+  let codemirror, doc, docSet, acm
 
   beforeEach(() => {
     doc = Automerge.change(Automerge.init(), doc => {
       doc.text = new Automerge.Text()
     })
-    watchableDoc = new Automerge.WatchableDoc(doc)
+    docSet = new Automerge.DocSet()
+    docSet.setDoc(docId, doc)
     const getDocText = doc => doc.text
 
     codemirror = CodeMirror(document.getElementById('editor'))
-    acm = new AutomergeCodeMirror(codemirror, watchableDoc, getDocText)
+    acm = new AutomergeCodeMirror(codemirror, docSet, docId, getDocText)
     acm.start()
   })
 
@@ -25,7 +28,7 @@ describe('AutomergeCodeMirror', () => {
       doc = Automerge.change(doc, editableDoc => {
         editableDoc.text.insertAt(0, ...'HELLO'.split(''))
       })
-      watchableDoc.set(doc)
+      docSet.setDoc(docId, doc)
 
       assert.strictEqual(codemirror.getValue(), doc.text.join(''))
     })
@@ -38,7 +41,7 @@ describe('AutomergeCodeMirror', () => {
         editableDoc.text.splice(0, 5)
       })
 
-      watchableDoc.set(doc)
+      docSet.setDoc(docId, doc)
 
       assert.strictEqual(codemirror.getValue(), doc.text.join(''))
     })
@@ -54,7 +57,7 @@ describe('AutomergeCodeMirror', () => {
         doc.text.splice(6, 11, replacement)
       })
 
-      watchableDoc.set(doc)
+      docSet.setDoc(docId, doc)
 
       assert.strictEqual(
         codemirror.getValue(),
@@ -71,7 +74,7 @@ describe('AutomergeCodeMirror', () => {
           doc = monkeyModify(doc)
         }
 
-        watchableDoc.set(doc)
+        docSet.setDoc(docId, doc)
         assert.strictEqual(doc.text.join(''), codemirror.getValue())
       })
     }
@@ -82,7 +85,7 @@ describe('AutomergeCodeMirror', () => {
       const text = 'HELLO'
       codemirror.setValue(text)
 
-      doc = watchableDoc.get()
+      doc = docSet.getDoc(docId)
       assert.strictEqual(doc.text.join(''), text)
     })
 
@@ -91,7 +94,7 @@ describe('AutomergeCodeMirror', () => {
       codemirror.replaceRange('HELLO', { line: 0, ch: 0 })
       codemirror.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
 
-      doc = watchableDoc.get()
+      doc = docSet.getDoc(docId)
       assert.strictEqual(doc.text.join(''), codemirror.getValue())
     })
 
@@ -105,7 +108,7 @@ describe('AutomergeCodeMirror', () => {
         { line: 3, ch: 0 }
       )
 
-      doc = watchableDoc.get()
+      doc = docSet.getDoc(docId)
       assert.strictEqual(
         doc.text.join(''),
         'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
@@ -119,7 +122,7 @@ describe('AutomergeCodeMirror', () => {
           monkeyType(codemirror)
         }
 
-        doc = watchableDoc.get()
+        doc = docSet.getDoc(docId)
         assert.strictEqual(doc.text.join(''), codemirror.getValue())
       })
     }

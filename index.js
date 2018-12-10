@@ -1,14 +1,15 @@
 const Automerge = require('automerge')
 
 class AutomergeCodeMirror {
-  constructor(codeMirror, watchableDoc, getDocText) {
+  constructor(codeMirror, docSet, docId, getDocText) {
     this._codeMirror = codeMirror
-    this._watchableDoc = watchableDoc
+    this._docSet = docSet
 
-    let oldDoc = watchableDoc.get()
+    let oldDoc = docSet.getDoc(docId)
     let processingCodeMirrorChange = false
 
-    this._automergeHandler = newDoc => {
+    this._automergeHandler = (changedDocId, newDoc) => {
+      if (changedDocId !== docId) return
       if (processingCodeMirrorChange) return
 
       const textObjectId = getDocText(oldDoc)._objectId
@@ -36,7 +37,7 @@ class AutomergeCodeMirror {
       if (change.origin === 'automerge') return
 
       processingCodeMirrorChange = true
-      const oldDoc = watchableDoc.get()
+      const oldDoc = docSet.getDoc(docId)
       const newDoc = Automerge.change(oldDoc, mdoc => {
         const text = getDocText(mdoc)
         const startPos = codeMirror.indexFromPos(change.from)
@@ -55,7 +56,7 @@ class AutomergeCodeMirror {
           text.splice(startPos, 0, ...addedText.split(''))
         }
       })
-      watchableDoc.set(newDoc)
+      docSet.setDoc(docId, newDoc)
       processingCodeMirrorChange = false
     }
   }
@@ -64,11 +65,11 @@ class AutomergeCodeMirror {
     // When CodeMirror is modified as the result of typing, apply changes to AutoMerge
     this._codeMirror.on('change', this._codeMirrorHandler)
     // When the doc is modified from the outside, apply the diff to CodeMirror
-    this._watchableDoc.registerHandler(this._automergeHandler)
+    this._docSet.registerHandler(this._automergeHandler)
   }
 
   stop() {
-    this._watchableDoc.unregisterHandler(this._automergeHandler)
+    this._docSet.unregisterHandler(this._automergeHandler)
     this._codeMirror.off('change', this._codeMirrorHandler)
   }
 }

@@ -2,53 +2,51 @@ const Automerge = require('automerge')
 const CodeMirror = require('codemirror')
 const AutomergeCodeMirror = require('../../index')
 
-const leftWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
-const rightWatchableDoc = new Automerge.WatchableDoc(Automerge.init())
+let leftConnection
+let rightConnection
 
-// SIMULATE NETWORK
+const leftDocSet = new Automerge.DocSet()
+leftConnection = new Automerge.Connection(leftDocSet, msg =>
+  rightConnection.receiveMsg(msg)
+)
+leftConnection.open()
 
-let oldLeftDoc = leftWatchableDoc.get()
-leftWatchableDoc.registerHandler(newLeftDoc => {
-  const changes = Automerge.getChanges(oldLeftDoc, newLeftDoc)
-  oldLeftDoc = newLeftDoc
-  if (changes.length === 0) return
-  rightWatchableDoc.applyChanges(changes)
-})
+const rightDocSet = new Automerge.DocSet()
+rightConnection = new Automerge.Connection(rightDocSet, msg =>
+  leftConnection.receiveMsg(msg)
+)
+rightConnection.open()
 
-let oldRightDoc = rightWatchableDoc.get()
-rightWatchableDoc.registerHandler(newRightDoc => {
-  const changes = Automerge.getChanges(oldRightDoc, newRightDoc)
-  oldRightDoc = newRightDoc
-  if (changes.length === 0) return
-  leftWatchableDoc.applyChanges(changes)
-})
+// leftDocSet.setDoc(docId, Automerge.init())
+// // rightDocSet.setDoc(docId, Automerge.init())
 
 // CREATE CODEMIRROR WHEN TEXT FIRST UPDATES
-function createCodeMirrorOnDocChange(watchableDoc, domId) {
+function createCodeMirrorOnDocChange(docSet, docId, domId) {
   let called = false
   function handler() {
-    watchableDoc.unregisterHandler(handler)
+    docSet.unregisterHandler(handler)
     if (called) return
     called = true
     const $e = document.getElementById(domId)
     const codeMirror = CodeMirror($e)
     const acm = new AutomergeCodeMirror(
       codeMirror,
-      leftWatchableDoc,
+      docSet,
+      docId,
       doc => doc.text
     )
     acm.start()
   }
-  watchableDoc.registerHandler(handler)
+  docSet.registerHandler(handler)
 }
 
-createCodeMirrorOnDocChange(rightWatchableDoc, 'right')
-createCodeMirrorOnDocChange(leftWatchableDoc, 'left')
+const docId = 'doc-id'
+
+createCodeMirrorOnDocChange(rightDocSet, docId, 'right')
+createCodeMirrorOnDocChange(leftDocSet, docId, 'left')
 
 // INJECT TEXT
-rightWatchableDoc.set(
-  Automerge.change(
-    rightWatchableDoc.get(),
-    doc => (doc.text = new Automerge.Text())
-  )
+rightDocSet.setDoc(
+  docId,
+  Automerge.change(Automerge.init(), doc => (doc.text = new Automerge.Text()))
 )
