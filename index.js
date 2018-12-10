@@ -75,7 +75,6 @@ class AutomergeCodeMirror {
   constructor(codeMirror, watchableDoc, getDocText) {
     this._codeMirror = codeMirror
     this._watchableDoc = watchableDoc
-    this._getDocText = getDocText
     this._oldDoc = watchableDoc.get()
     this._textObjectId = getDocText(this._oldDoc)._objectId
 
@@ -107,6 +106,5 @@ class AutomergeCodeMirror {
 module.exports = {
   applyCodeMirrorChangeToArray,
   applyAutomergeDiffToCodeMirror,
-  updateAutomergeHandler: makeUpdateAutomergeHandler,
   AutomergeCodeMirror,
 }
