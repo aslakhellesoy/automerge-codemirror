@@ -10,7 +10,10 @@ class AutomergeCodeMirror {
 
     this._automergeHandler = (changedDocId, newDoc) => {
       if (changedDocId !== docId) return
-      if (processingCodeMirrorChange) return
+      if (processingCodeMirrorChange) {
+        oldDoc = newDoc
+        return
+      }
 
       const textObjectId = getDocText(oldDoc)._objectId
       const diff = Automerge.diff(oldDoc, newDoc)
