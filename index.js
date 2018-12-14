@@ -67,9 +67,9 @@ class AutomergeCodeMirror {
   }
 
   start() {
-    this._codeMirror.value = this._getDocText(
-      this._docSet.getDoc(this._docId)
-    ).join('')
+    this._codeMirror.setValue(
+      this._getDocText(this._docSet.getDoc(this._docId)).join('')
+    )
     // When CodeMirror is modified as the result of typing, apply changes to AutoMerge
     this._codeMirror.on('change', this._codeMirrorHandler)
     // When the doc is modified from the outside, apply the diff to CodeMirror
