@@ -2,14 +2,29 @@
 
 [![Build Status](https://travis-ci.org/aslakhellesoy/automerge-codemirror.svg?branch=master)](https://travis-ci.org/aslakhellesoy/automerge-codemirror)
 
-Automerge-CodeMirror links a CodeMirror instance to a `Automerge.Text` object. Simply create an `Automerge.Doc` and
-Automerge-CodeMirror will link to the doc's `text` property.
+Automerge-CodeMirror links a CodeMirror instance to an `Automerge.Text` object.
 
-When the CodeMirror text is changed, the linked `Automerge.Text` in the Automerge document is updated via the `Automerge#change`
-method.
+## Installation
 
-When the `Automerge.Text` in the Automerge document is changed (by syncing with external documents), CodeMirror's value is updated via the `CodeMirror#replaceRange`
-method.
+    npm install automerge-codemirror
+
+## Usage
+
+```javascript
+const AutomergeCodeMirror = require('automerge-codemirror')
+
+const codeMirror = CodeMirror(document.getElementById('editor'))
+const acm = new AutomergeCodeMirror(
+  codeMirror, // The CodeMirror editor to sync with
+  docSet, // An Automerge.DocSet instance
+  docId, // A string, identifying the document in the docSet
+  doc => doc.text // A function returning the Automerge.Text object within the Automerge document
+)
+acm.start() // Start bidirectional syncronisation
+```
+
+Automerge-CodeMirror is designed to be used with `Automerge.Connection` to synchronise changes with
+other peers. See the [Automerge](https://github.com/automerge/automerge) documentation for details.
 
 ## Demo
 
