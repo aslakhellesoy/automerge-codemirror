@@ -1,24 +1,30 @@
 const Automerge = require('automerge')
 
 class AutomergeCodeMirror {
-  constructor(codeMirror, docSet, docId, getDocText) {
+  constructor({
+    codeMirror,
+    getDocText,
+    doc,
+    updateDoc,
+    registerHandler,
+    unregisterHandler,
+  }) {
     this._codeMirror = codeMirror
-    this._docSet = docSet
-    this._docId = docId
     this._getDocText = getDocText
-
-    let oldDoc = docSet.getDoc(docId)
+    this._doc = doc
+    this._updateDoc = updateDoc
+    this._registerHandler = registerHandler
+    this._unregisterHandler = unregisterHandler
     let processingCodeMirrorChange = false
 
-    this._automergeHandler = (changedDocId, newDoc) => {
-      if (changedDocId !== docId) return
+    this._automergeHandler = newDoc => {
       if (processingCodeMirrorChange) {
-        oldDoc = newDoc
+        this._doc = newDoc
         return
       }
 
-      const textObjectId = getDocText(oldDoc)._objectId
-      const diff = Automerge.diff(oldDoc, newDoc)
+      const textObjectId = getDocText(this._doc)._objectId
+      const diff = Automerge.diff(this._doc, newDoc)
       for (const d of diff) {
         if (d.obj !== textObjectId) continue
         switch (d.action) {
@@ -35,15 +41,14 @@ class AutomergeCodeMirror {
           }
         }
       }
-      oldDoc = newDoc
+      this._doc = newDoc
     }
 
     this._codeMirrorHandler = (codeMirror, change) => {
       if (change.origin === 'automerge') return
 
       processingCodeMirrorChange = true
-      const oldDoc = docSet.getDoc(docId)
-      const newDoc = Automerge.change(oldDoc, mdoc => {
+      const doc = Automerge.change(this._doc, mdoc => {
         const text = getDocText(mdoc)
         const startPos = codeMirror.indexFromPos(change.from)
 
@@ -61,23 +66,21 @@ class AutomergeCodeMirror {
           text.splice(startPos, 0, ...addedText.split(''))
         }
       })
-      docSet.setDoc(docId, newDoc)
+      this._updateDoc(doc)
       processingCodeMirrorChange = false
     }
   }
 
   start() {
-    this._codeMirror.setValue(
-      this._getDocText(this._docSet.getDoc(this._docId)).join('')
-    )
+    this._codeMirror.setValue(this._getDocText(this._doc).join(''))
     // When CodeMirror is modified as the result of typing, apply changes to AutoMerge
     this._codeMirror.on('change', this._codeMirrorHandler)
     // When the doc is modified from the outside, apply the diff to CodeMirror
-    this._docSet.registerHandler(this._automergeHandler)
+    this._registerHandler(this._automergeHandler)
   }
 
   stop() {
-    this._docSet.unregisterHandler(this._automergeHandler)
+    this._unregisterHandler(this._automergeHandler)
     this._codeMirror.off('change', this._codeMirrorHandler)
   }
 }

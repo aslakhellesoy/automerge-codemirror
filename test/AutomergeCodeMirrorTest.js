@@ -4,11 +4,12 @@ require('./browserenv')
 const CodeMirror = require('codemirror')
 const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
+const { DocSetWatchableDoc, docSetDoc } = require('automerge-utils')
 
 let docId = 'doc-id'
 
 describe('AutomergeCodeMirror', () => {
-  let codemirror, doc, docSet, acm
+  let codeMirror, acm, doc, docSet
 
   beforeEach(() => {
     doc = Automerge.change(Automerge.init(), doc => {
@@ -16,10 +17,24 @@ describe('AutomergeCodeMirror', () => {
     })
     docSet = new Automerge.DocSet()
     docSet.setDoc(docId, doc)
+    const watchableDoc = new DocSetWatchableDoc(docSet, docId)
+
     const getDocText = doc => doc.text
 
-    codemirror = CodeMirror(document.getElementById('editor'))
-    acm = new AutomergeCodeMirror(codemirror, docSet, docId, getDocText)
+    codeMirror = CodeMirror(document.getElementById('editor'))
+
+    const updateDoc = watchableDoc.set.bind(watchableDoc)
+    const registerHandler = watchableDoc.registerHandler.bind(watchableDoc)
+    const unregisterHandler = watchableDoc.unregisterHandler.bind(watchableDoc)
+
+    acm = new AutomergeCodeMirror({
+      codeMirror,
+      getDocText,
+      doc,
+      updateDoc,
+      registerHandler,
+      unregisterHandler,
+    })
     acm.start()
   })
 
@@ -30,7 +45,7 @@ describe('AutomergeCodeMirror', () => {
       })
       docSet.setDoc(docId, doc)
 
-      assert.strictEqual(codemirror.getValue(), doc.text.join(''))
+      assert.strictEqual(codeMirror.getValue(), doc.text.join(''))
     })
 
     it('removes text', () => {
@@ -43,7 +58,7 @@ describe('AutomergeCodeMirror', () => {
 
       docSet.setDoc(docId, doc)
 
-      assert.strictEqual(codemirror.getValue(), doc.text.join(''))
+      assert.strictEqual(codeMirror.getValue(), doc.text.join(''))
     })
 
     it('replaces a couple of lines', () => {
@@ -60,7 +75,7 @@ describe('AutomergeCodeMirror', () => {
       docSet.setDoc(docId, doc)
 
       assert.strictEqual(
-        codemirror.getValue(),
+        codeMirror.getValue(),
         'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
       )
     })
@@ -75,7 +90,7 @@ describe('AutomergeCodeMirror', () => {
         }
 
         docSet.setDoc(docId, doc)
-        assert.strictEqual(doc.text.join(''), codemirror.getValue())
+        assert.strictEqual(doc.text.join(''), codeMirror.getValue())
       })
     }
   })
@@ -83,26 +98,26 @@ describe('AutomergeCodeMirror', () => {
   describe('CodeMirror -> Automerge', () => {
     it('adds text', () => {
       const text = 'HELLO'
-      codemirror.setValue(text)
+      codeMirror.setValue(text)
 
       doc = docSet.getDoc(docId)
       assert.strictEqual(doc.text.join(''), text)
     })
 
     it('removes text', () => {
-      codemirror.setValue('')
-      codemirror.replaceRange('HELLO', { line: 0, ch: 0 })
-      codemirror.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
+      codeMirror.setValue('')
+      codeMirror.replaceRange('HELLO', { line: 0, ch: 0 })
+      codeMirror.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
 
       doc = docSet.getDoc(docId)
-      assert.strictEqual(doc.text.join(''), codemirror.getValue())
+      assert.strictEqual(doc.text.join(''), codeMirror.getValue())
     })
 
     it('replaces a couple of lines', () => {
       const text = 'three\nblind\nmice\nsee\nhow\nthey\nrun\n'
-      codemirror.setValue(text)
+      codeMirror.setValue(text)
 
-      codemirror.replaceRange(
+      codeMirror.replaceRange(
         'evil\nrats\n',
         { line: 1, ch: 0 },
         { line: 3, ch: 0 }
@@ -117,13 +132,13 @@ describe('AutomergeCodeMirror', () => {
 
     for (let n = 0; n < 10; n++) {
       it(`works with random edits (fuzz test ${n})`, () => {
-        codemirror.setValue(randomString(20))
+        codeMirror.setValue(randomString(20))
         for (let t = 0; t < 10; t++) {
-          monkeyType(codemirror)
+          monkeyType(codeMirror)
         }
 
         doc = docSet.getDoc(docId)
-        assert.strictEqual(doc.text.join(''), codemirror.getValue())
+        assert.strictEqual(doc.text.join(''), codeMirror.getValue())
       })
     }
   })
