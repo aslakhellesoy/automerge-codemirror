@@ -9,7 +9,7 @@
   "scripts": {
     "nyc": "nyc --reporter=html --reporter=text mocha",
     "test": "mocha",
-    "build-example": "webpack-cli example/src/app.js --output example/build/app.js"
+    "build-example": "webpack-cli example/src/app.js --output example/build/app.js --output-source-map-filename example/build/app.js.map --mode development"
   },
   "dependencies": {
     "automerge": "^0.9.2",

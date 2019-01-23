@@ -5,8 +5,8 @@ const CodeMirror = require('codemirror')
 const Automerge = require('automerge')
 const AutomergeCodeMirror = require('..')
 
-describe('AutomergeCodeMirror', () => {
-  let codeMirror, acm, doc, updateDoc
+describe('automergeCodeMirror', () => {
+  let codeMirror, doc, updateDoc, stop
 
   beforeEach(() => {
     doc = Automerge.change(Automerge.init(), doc => {
@@ -22,9 +22,9 @@ describe('AutomergeCodeMirror', () => {
       handlers.forEach(h => h(doc))
     }
     const registerHandler = handler => handlers.add(handler)
-    const unregisterHandler = handler => handlers.remove(handler)
+    const unregisterHandler = handler => handlers.delete(handler)
 
-    acm = new AutomergeCodeMirror({
+    stop = AutomergeCodeMirror({
       codeMirror,
       getDocText,
       doc,
@@ -32,8 +32,9 @@ describe('AutomergeCodeMirror', () => {
       registerHandler,
       unregisterHandler,
     })
-    acm.start()
   })
+
+  afterEach(() => stop())
 
   describe('Automerge -> CodeMirror', () => {
     it('adds text', () => {
@@ -42,7 +43,7 @@ describe('AutomergeCodeMirror', () => {
       })
       updateDoc(doc)
 
-      assert.strictEqual(codeMirror.getValue(), doc.text.join(''))
+      assert.deepStrictEqual(codeMirror.getValue(), doc.text.join(''))
     })
 
     it('removes text', () => {
@@ -54,7 +55,7 @@ describe('AutomergeCodeMirror', () => {
       })
       updateDoc(doc)
 
-      assert.strictEqual(codeMirror.getValue(), doc.text.join(''))
+      assert.deepStrictEqual(codeMirror.getValue(), doc.text.join(''))
     })
 
     it('replaces a couple of lines', () => {
@@ -69,7 +70,7 @@ describe('AutomergeCodeMirror', () => {
       })
 
       updateDoc(doc)
-      assert.strictEqual(
+      assert.deepStrictEqual(
         codeMirror.getValue(),
         'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
       )
@@ -85,7 +86,7 @@ describe('AutomergeCodeMirror', () => {
         }
 
         updateDoc(doc)
-        assert.strictEqual(doc.text.join(''), codeMirror.getValue())
+        assert.deepStrictEqual(doc.text.join(''), codeMirror.getValue())
       })
     }
   })
@@ -96,7 +97,7 @@ describe('AutomergeCodeMirror', () => {
       codeMirror.setValue(text)
 
       updateDoc(doc)
-      assert.strictEqual(doc.text.join(''), text)
+      assert.deepStrictEqual(doc.text.join(''), text)
     })
 
     it('removes text', () => {
@@ -104,7 +105,7 @@ describe('AutomergeCodeMirror', () => {
       codeMirror.replaceRange('HELLO', { line: 0, ch: 0 })
       codeMirror.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
 
-      assert.strictEqual(doc.text.join(''), codeMirror.getValue())
+      assert.deepStrictEqual(doc.text.join(''), codeMirror.getValue())
     })
 
     it('replaces a couple of lines', () => {
@@ -117,7 +118,7 @@ describe('AutomergeCodeMirror', () => {
         { line: 3, ch: 0 }
       )
 
-      assert.strictEqual(
+      assert.deepStrictEqual(
         doc.text.join(''),
         'three\nevil\nrats\nsee\nhow\nthey\nrun\n'
       )
@@ -130,7 +131,7 @@ describe('AutomergeCodeMirror', () => {
           monkeyType(codeMirror)
         }
 
-        assert.strictEqual(doc.text.join(''), codeMirror.getValue())
+        assert.deepStrictEqual(doc.text.join(''), codeMirror.getValue())
       })
     }
   })
