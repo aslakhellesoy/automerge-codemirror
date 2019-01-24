@@ -11,20 +11,27 @@ Automerge-CodeMirror links a CodeMirror instance to an `Automerge.Text` object.
 ## Usage
 
 ```javascript
-const AutomergeCodeMirror = require('automerge-codemirror')
+const automergeCodeMirror = require('automerge-codemirror')
 
 const codeMirror = CodeMirror(document.getElementById('editor'))
-const acm = new AutomergeCodeMirror(
+const getDocText = doc => doc.text
+const updateDoc = doc => docSet.setDoc(docId, doc)
+
+const { automergeHandler, codeMirrorHandler } = new automergeCodeMirror({
   codeMirror, // The CodeMirror editor to sync with
-  docSet, // An Automerge.DocSet instance
-  docId, // A string, identifying the document in the docSet
-  doc => doc.text // A function returning the Automerge.Text object within the Automerge document
-)
-acm.start() // Start bidirectional syncronisation
+  getDocText, // A function returning the Automerge.Text object within the Automerge document
+  updateDoc, // A function that captures the updated Automerge document (whenever the editor changes)
+})
+
+codeMirror.on('change', codeMirrorHandler)
+docSet.registerHandler(automergeHandler)
 ```
 
-Automerge-CodeMirror is designed to be used with `Automerge.Connection` to synchronise changes with
-other peers. See the [Automerge](https://github.com/automerge/automerge) documentation for details.
+Automerge-CodeMirror is agnostic of how you choose to synchronize the Automerge document
+with other peers. You can use `Automerge.DocSet` / `Automerge.Connection`, but you can also
+use any other mechanism.
+
+See the [Automerge](https://github.com/automerge/automerge) documentation for details.
 
 ## Demo
 
