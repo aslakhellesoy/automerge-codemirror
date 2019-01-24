@@ -3,10 +3,10 @@ const assert = require('assert')
 require('./browserenv')
 const CodeMirror = require('codemirror')
 const Automerge = require('automerge')
-const AutomergeCodeMirror = require('..')
+const automergeCodeMirror = require('..')
 
 describe('automergeCodeMirror', () => {
-  let codeMirror, doc, updateDoc, stop
+  let codeMirror, doc, updateDoc, automergeHandler, codeMirrorHandler
 
   beforeEach(() => {
     doc = Automerge.change(Automerge.init(), doc => {
@@ -16,25 +16,24 @@ describe('automergeCodeMirror', () => {
 
     codeMirror = CodeMirror(document.getElementById('editor'))
 
-    const handlers = new Set()
     updateDoc = d => {
       doc = d
-      handlers.forEach(h => h(doc))
+      if (automergeHandler) automergeHandler(doc)
     }
-    const registerHandler = handler => handlers.add(handler)
-    const unregisterHandler = handler => handlers.delete(handler)
 
-    stop = AutomergeCodeMirror({
-      codeMirror,
-      getDocText,
-      doc,
-      updateDoc,
-      registerHandler,
-      unregisterHandler,
-    })
+    const acm = automergeCodeMirror({ codeMirror, getDocText, updateDoc })
+    automergeHandler = acm.automergeHandler
+    codeMirrorHandler = acm.codeMirrorHandler
+
+    codeMirror.on('change', codeMirrorHandler)
+
+    updateDoc(doc)
   })
 
-  afterEach(() => stop())
+  afterEach(() => {
+    codeMirror.off('change', codeMirrorHandler)
+    automergeHandler = null
+  })
 
   describe('Automerge -> CodeMirror', () => {
     it('adds text', () => {
@@ -95,13 +94,10 @@ describe('automergeCodeMirror', () => {
     it('adds text', () => {
       const text = 'HELLO'
       codeMirror.setValue(text)
-
-      updateDoc(doc)
       assert.deepStrictEqual(doc.text.join(''), text)
     })
 
     it('removes text', () => {
-      codeMirror.setValue('')
       codeMirror.replaceRange('HELLO', { line: 0, ch: 0 })
       codeMirror.replaceRange('', { line: 0, ch: 0 }, { line: 0, ch: 5 })
 

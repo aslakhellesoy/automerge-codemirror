@@ -1,13 +1,16 @@
 const Automerge = require('automerge')
 
-function automergeCodeMirror({
-  codeMirror,
-  getDocText,
-  doc,
-  updateDoc,
-  registerHandler,
-  unregisterHandler,
-}) {
+/**
+ * Creates event handlers that can be used to link a CodeMirror instance to an Automerge.Text object.
+ * The returned handlers should be registered within CodeMirror and the Automerge doc.
+ *
+ * @param codeMirror: CodeMirror - the editor
+ * @param getDocText: (doc) => Automerge.Text - Function that returns the Text to link to
+ * @param updateDoc: (doc) => void - callback that will be called whenever CodeMirror has modified the doc
+ * @return {{automergeHandler: (doc) => void, codeMirrorHandler: (codeMirror, change)}}
+ */
+function automergeCodeMirror({ codeMirror, getDocText, updateDoc }) {
+  let doc = null
   let processingCodeMirrorChange = false
 
   function getText(doc) {
@@ -26,6 +29,21 @@ function automergeCodeMirror({
       doc = newDoc
       return
     }
+    if (!doc) {
+      doc = newDoc
+      // We'll replace the entire editor value on the first automerge update
+      const fromPos = codeMirror.posFromIndex(0)
+      const toPos = codeMirror.posFromIndex(codeMirror.getValue().length)
+      codeMirror.replaceRange(
+        getText(newDoc).join(''),
+        fromPos,
+        toPos,
+        'automerge'
+      )
+      return
+    }
+
+    // After the first automerge update we update the doc using a diff
 
     const textObjectId = getText(doc)._objectId
     const diff = Automerge.diff(doc, newDoc)
@@ -50,8 +68,10 @@ function automergeCodeMirror({
 
   function codeMirrorHandler(codeMirror, change) {
     if (change.origin === 'automerge') return
+    if (!doc) {
+      throw new Error(`Editor can't be used before the document has a value`)
+    }
 
-    processingCodeMirrorChange = true
     doc = Automerge.change(doc, mdoc => {
       const text = getText(mdoc)
       const startPos = codeMirror.indexFromPos(change.from)
@@ -70,20 +90,12 @@ function automergeCodeMirror({
         text.splice(startPos, 0, ...addedText.split(''))
       }
     })
+    processingCodeMirrorChange = true
     updateDoc(doc)
     processingCodeMirrorChange = false
   }
 
-  codeMirror.setValue(getText(doc).join(''))
-  // When CodeMirror is modified as the result of typing, apply changes to AutoMerge
-  codeMirror.on('change', codeMirrorHandler)
-  // When the doc is modified from the outside, apply the diff to CodeMirror
-  registerHandler(automergeHandler)
-
-  return () => {
-    unregisterHandler(automergeHandler)
-    codeMirror.off('change', codeMirrorHandler)
-  }
+  return { automergeHandler, codeMirrorHandler }
 }
 
 module.exports = automergeCodeMirror
