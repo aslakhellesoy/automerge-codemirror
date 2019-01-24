@@ -1,6 +1,6 @@
 {
   "name": "automerge-codemirror",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Automerge plugin for CodeMirror",
   "main": "index.js",
   "repository": "https://github.com/aslakhellesoy/automerge-codemirror",
