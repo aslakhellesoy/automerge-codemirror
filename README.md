@@ -17,7 +17,7 @@ const codeMirror = CodeMirror(document.getElementById('editor'))
 const getDocText = doc => doc.text
 const updateDoc = doc => docSet.setDoc(docId, doc)
 
-const { automergeHandler, codeMirrorHandler } = new automergeCodeMirror({
+const { automergeHandler, codeMirrorHandler } = automergeCodeMirror({
   codeMirror, // The CodeMirror editor to sync with
   getDocText, // A function returning the Automerge.Text object within the Automerge document
   updateDoc, // A function that captures the updated Automerge document (whenever the editor changes)
