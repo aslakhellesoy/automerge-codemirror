@@ -71,7 +71,6 @@ function automergeCodeMirror({ codeMirror, getDocText, updateDoc }) {
     if (!doc) {
       throw new Error(`Editor can't be used before the document has a value`)
     }
-
     doc = Automerge.change(doc, mdoc => {
       const text = getText(mdoc)
       const startPos = codeMirror.indexFromPos(change.from)
