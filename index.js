@@ -45,7 +45,7 @@ function automergeCodeMirror({ codeMirror, getDocText, updateDoc }) {
 
     // After the first automerge update we update the doc using a diff
 
-    const textObjectId = getText(doc)._objectId
+    const textObjectId = Automerge.getObjectId(getText(doc))
     const diff = Automerge.diff(doc, newDoc)
     for (const d of diff) {
       if (d.obj !== textObjectId) continue
