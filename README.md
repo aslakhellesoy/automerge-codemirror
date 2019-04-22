@@ -49,3 +49,24 @@ Build it:
     yarn build-example
 
 Open `example/index.html`
+
+## TODO
+
+If a document has multiple `Text` nodes, the implementation is inefficient because the
+`diff` between an old and a new doc is calculated and processed for each `Text` node.
+
+A more efficient implementation would only compute and process the diff once, and then
+apply it to each CodeMirror instance.
+
+```javascript
+// Initialise an instance without any doc or editors
+let automergeHandler = makeCodeMirrorAutomergeHandler(updateDoc)
+acm = addCodeMirror(getDocText, codeMirror)
+```
+
+There is also a bug with concurrent editing - the diff is calculated against diverged
+states. Not sure how to handle this yet.
+
+So we need to rethink the design:
+
+- Single traversal of diffs
