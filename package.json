@@ -11,19 +11,23 @@
     "test": "mocha",
     "build-example": "webpack-cli example/src/app.js --output example/build/app.js --output-source-map-filename example/build/app.js.map --mode development"
   },
-  "peerDependencies": {
-    "automerge": "^0.10.0",
-    "codemirror": "^5.43.0"
+  "dependencies": {
+    "automerge": "aslakhellesoy/automerge#types-prebuilt",
+    "codemirror": "^5.46.0"
   },
   "devDependencies": {
-    "automerge": "^0.10.0",
-    "codemirror": "^5.45.0",
+    "@types/codemirror": "^0.0.74",
+    "@types/jsdom": "^12.2.3",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^11.13.7",
     "husky": "^1.3.1",
     "jsdom": "^14.1.0",
     "mocha": "^6.1.4",
     "nyc": "^14.0.0",
     "prettier": "^1.17.0",
     "pretty-quick": "^1.10.0",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.4",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.0"
   },

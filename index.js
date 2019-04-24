@@ -7,7 +7,7 @@ const Automerge = require('automerge')
  * @param codeMirror: CodeMirror - the editor
  * @param getDocText: (doc) => Automerge.Text - Function that returns the Text to link to
  * @param updateDoc: (doc) => void - callback that will be called whenever CodeMirror has modified the doc
- * @return {{automergeHandler: (doc) => void, codeMirrorHandler: (codeMirror, change)}}
+ * @return {{automergeHandler: (doc) => void, codeMirrorHandler: (codeMirrorDoc, change)}}
  */
 function automergeCodeMirror({ codeMirror, getDocText, updateDoc }) {
   let doc = null
