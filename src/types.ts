@@ -1,9 +1,9 @@
-import Automerge from 'automerge'
-import * as CodeMirror from 'codemirror'
+import { Text } from 'automerge'
+import { Editor } from 'codemirror'
 
 interface Link<T> {
-  getText(doc: T): Automerge.Text
-  codeMirrorDoc: CodeMirror.Doc
+  getText(doc: T): Text | undefined
+  codeMirror: Editor
 }
 
 export { Link }

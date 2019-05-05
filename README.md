@@ -21,19 +21,19 @@ const automergeCodeMirror = require('automerge-codemirror')
 
 const docId = 'some-id'
 
-const codeMirrorDoc = CodeMirror(document.getElementById('editor'))
+const codeMirror = CodeMirror(document.getElementById('editor'))
 // A function returning the Automerge.Text object within the Automerge document
 const getDocText = doc => doc.text
 // A function that gets called whenever the Automerge document is updated by editor changes
-const updateDoc = doc => docSet.setDoc(docId, doc)
+const setAutomergeDoc = doc => docSet.setDoc(docId, doc)
 
 const { automergeHandler, codeMirrorHandler } = automergeCodeMirror({
-  codeMirrorDoc,
+  codeMirror,
   getDocText,
-  updateDoc,
+  setAutomergeDoc,
 })
 
-codeMirrorDoc.on('change', codeMirrorHandler)
+codeMirror.on('change', codeMirrorHandler)
 
 docSet.registerHandler((updatedDocId, updatedDoc) => {
   if (updatedDocId === docId) {
@@ -60,8 +60,8 @@ apply it to each CodeMirror instance.
 
 ```javascript
 // Initialise an instance without any doc or editors
-let automergeHandler = makeCodeMirrorAutomergeHandler(updateDoc)
-acm = addCodeMirror(getDocText, codeMirrorDoc)
+let automergeHandler = makeCodeMirrorAutomergeHandler(setAutomergeDoc)
+acm = addCodeMirror(getDocText, codeMirror)
 ```
 
 There is also a bug with concurrent editing - the diff is calculated against diverged

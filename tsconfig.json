@@ -22,6 +22,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "downlevelIteration": true,
+    "esModuleInterop": true,
     "types": ["node", "automerge", "codemirror", "mocha"]
   },
   "include": ["src/**/*", "test/**/*"],

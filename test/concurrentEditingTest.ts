@@ -1,11 +1,9 @@
-import * as assert from 'assert'
+import assert from 'assert'
 import './codeMirrorEnv'
-import * as Automerge from 'automerge'
-// import updateCodeMirror from "../src/updateCodeMirror"
-import updateAutomerge from '../src/updateAutomerge'
-import * as CodeMirror from 'codemirror'
-import { Link } from '../src/types'
-import updateCodeMirror from '../src/updateCodeMirror'
+import Automerge from 'automerge'
+import updateAutomerge from '../src/updateAutomergeDoc'
+import CodeMirror from 'codemirror'
+import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
 
 interface TestDoc {
   text: Automerge.Text
@@ -68,19 +66,19 @@ describe('concurrent editing', () => {
       processingCodeMirrorChangeLeft = false
     })
 
-    const leftLinks: Link<TestDoc>[] = [
+    const leftLinks = new Set([
       {
-        codeMirrorDoc: leftCodeMirror.getDoc(),
+        codeMirror: leftCodeMirror,
         getText,
       },
-    ]
+    ])
 
     leftDocSet.registerHandler((_, newDoc) => {
       if (processingCodeMirrorChangeLeft) {
         left = newDoc
         return
       }
-      updateCodeMirror(left, newDoc, leftLinks)
+      updateCodeMirrorDocs(left, newDoc, leftLinks)
       left = newDoc
     })
 
@@ -101,19 +99,19 @@ describe('concurrent editing', () => {
       processingCodeMirrorChangeRight = false
     })
 
-    const rightLinks: Link<TestDoc>[] = [
+    const rightLinks = new Set([
       {
-        codeMirrorDoc: rightCodeMirror.getDoc(),
+        codeMirror: rightCodeMirror,
         getText,
       },
-    ]
+    ])
 
     rightDocSet.registerHandler((_, newDoc) => {
       if (processingCodeMirrorChangeRight) {
         right = newDoc
         return
       }
-      updateCodeMirror(right, newDoc, rightLinks)
+      updateCodeMirrorDocs(right, newDoc, rightLinks)
       right = newDoc
     })
 
@@ -126,10 +124,22 @@ describe('concurrent editing', () => {
     leftConnection.open()
     rightConnection.open()
 
-    assert.strictEqual('LEFTRIGHT', leftCodeMirror.getValue())
-    assert.strictEqual('LEFTRIGHT', rightCodeMirror.getValue())
+    assertEqualsOneOf(leftCodeMirror.getValue(), 'LEFTRIGHT', 'RIGHTLEFT')
+    assertEqualsOneOf(rightCodeMirror.getValue(), 'LEFTRIGHT', 'RIGHTLEFT')
 
-    assert.strictEqual('LEFTRIGHT', getText(left).join(''))
-    assert.strictEqual('LEFTRIGHT', getText(right).join(''))
+    assertEqualsOneOf(getText(left).join(''), 'LEFTRIGHT', 'RIGHTLEFT')
+    assertEqualsOneOf(getText(right).join(''), 'LEFTRIGHT', 'RIGHTLEFT')
   })
 })
+
+function assertEqualsOneOf(actual: any, ...expected: any) {
+  assert.strictEqual(expected.length > 0, true)
+  for (let i = 0; i < expected.length; i++) {
+    try {
+      assert.strictEqual(actual, expected[i])
+      return // if we get here without an exception, that means success
+    } catch (e) {
+      if (!e.name.match(/^AssertionError/) || i === expected.length - 1) throw e
+    }
+  }
+}

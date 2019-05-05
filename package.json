@@ -7,13 +7,17 @@
   "author": "Aslak Hellesøy",
   "license": "MIT",
   "scripts": {
-    "nyc": "nyc --reporter=html --reporter=text mocha",
-    "test": "mocha",
+    "nyc": "nyc --reporter=html --reporter=text mocha test/**/*.{ts,tsx}",
+    "test": "mocha test/**/*.{ts,tsx}",
     "build-example": "webpack-cli example/src/app.js --output example/build/app.js --output-source-map-filename example/build/app.js.map --mode development"
   },
   "dependencies": {
+    "@types/react": "^16.8.16",
+    "@types/react-dom": "^16.8.4",
     "automerge": "aslakhellesoy/automerge#types-prebuilt",
-    "codemirror": "^5.46.0"
+    "codemirror": "^5.46.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "devDependencies": {
     "@types/codemirror": "^0.0.74",

@@ -1,8 +1,8 @@
-import * as assert from 'assert'
+import assert from 'assert'
 import './codeMirrorEnv'
-import * as Automerge from 'automerge'
-import updateAutomerge from '../src/updateAutomerge'
-import * as CodeMirror from 'codemirror'
+import Automerge from 'automerge'
+import updateAutomerge from '../src/updateAutomergeDoc'
+import CodeMirror from 'codemirror'
 import { randomPositiveInt, randomString } from './random'
 
 interface TestDoc {
@@ -11,23 +11,7 @@ interface TestDoc {
 
 const getText = (doc: TestDoc): Automerge.Text => doc.text
 
-function monkeyType(codeMirrorDoc: CodeMirror.Doc) {
-  const textLength = codeMirrorDoc.getValue().length
-  const index = Math.floor(Math.random() * textLength)
-  const from = codeMirrorDoc.posFromIndex(index)
-  const editLength = randomPositiveInt(10)
-  if (Math.random() < 0.7) {
-    // Add text
-    const text = randomString(editLength)
-    codeMirrorDoc.replaceRange(text, codeMirrorDoc.posFromIndex(index))
-  } else {
-    const endIndex = Math.max(index + editLength, textLength - index)
-    const to = codeMirrorDoc.posFromIndex(endIndex)
-    codeMirrorDoc.replaceRange('', from, to)
-  }
-}
-
-describe('updateCodeMirror', () => {
+describe('updateAutomergeDoc', () => {
   let div: HTMLDivElement
   beforeEach(() => {
     div = document.createElement('div')
@@ -72,3 +56,19 @@ describe('updateCodeMirror', () => {
     })
   }
 })
+
+function monkeyType(codeMirrorDoc: CodeMirror.Doc) {
+  const textLength = codeMirrorDoc.getValue().length
+  const index = Math.floor(Math.random() * textLength)
+  const from = codeMirrorDoc.posFromIndex(index)
+  const editLength = randomPositiveInt(10)
+  if (Math.random() < 0.7) {
+    // Add text
+    const text = randomString(editLength)
+    codeMirrorDoc.replaceRange(text, codeMirrorDoc.posFromIndex(index))
+  } else {
+    const endIndex = Math.max(index + editLength, textLength - index)
+    const to = codeMirrorDoc.posFromIndex(endIndex)
+    codeMirrorDoc.replaceRange('', from, to)
+  }
+}

@@ -1,0 +1,1 @@
+--renderer --recursive --require ts-node/register

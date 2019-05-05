@@ -1,14 +1,23 @@
 import * as Automerge from 'automerge'
 import * as CodeMirror from 'codemirror'
 
-export default function<T>(
+/**
+ * Applies CodeMirror edits and returns a new Automerge Doc
+ *
+ * @param doc the current doc
+ * @param getText a function that returns a Text object
+ * @param codeMirror the editor
+ * @param change the change
+ */
+export default function updateAutomergeDoc<T>(
   doc: T,
-  getText: (doc: T) => Automerge.Text,
+  getText: (doc: T) => Automerge.Text | undefined,
   codeMirror: CodeMirror.Doc,
   change: CodeMirror.EditorChange
 ): T {
   return Automerge.change(doc, mdoc => {
     const text = getText(mdoc)
+    if (!text) return
     const startPos = codeMirror.indexFromPos(change.from)
 
     const removedLines = change.removed || []
