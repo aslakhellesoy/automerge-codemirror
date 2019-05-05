@@ -26,8 +26,8 @@ export default function makeAutomergeCodeMirror<T>(): React.FunctionComponent<
       const codeMirror = CodeMirror(codeMirrorDiv!, config)
 
       const changeHandler = (editor: Editor, change: EditorChange) => {
-        const automergeChange = change.origin !== 'automerge'
-        if (automergeChange) {
+        const automergeChange = change.origin === 'automerge'
+        if (!automergeChange) {
           const doc = updateAutomerge(
             getAutomergeDoc(),
             getText,
@@ -50,7 +50,7 @@ export default function makeAutomergeCodeMirror<T>(): React.FunctionComponent<
         links.delete(link)
         codeMirror.off('change', changeHandler)
       }
-    }, [getAutomergeDoc])
+    }, [])
 
     return (
       <div
