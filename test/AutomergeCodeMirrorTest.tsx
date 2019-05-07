@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom'
 import { Editor, EditorConfiguration } from 'codemirror'
 import { Link } from '../src/types'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
-import Automerge from 'automerge'
+import Automerge, { DocSet } from 'automerge'
 import assert from 'assert'
 import makeAutomergeCodeMirror from '../src/makeAutomergeCodeMirror'
 
@@ -19,17 +19,26 @@ describe('<AutomergeCodeMirror/>', () => {
     document.body.appendChild(div)
     const links = new Set<Link<TestDoc>>()
 
-    let doc: TestDoc = Automerge.change(Automerge.init(), mdoc => {
-      mdoc.text1 = new Automerge.Text()
-      mdoc.text2 = new Automerge.Text()
+    const docSet = new DocSet<TestDoc>()
+    let doc: TestDoc = Automerge.init()
+    docSet.setDoc(
+      'id',
+      Automerge.change(doc, mdoc => {
+        mdoc.text1 = new Automerge.Text()
+        mdoc.text2 = new Automerge.Text()
+      })
+    )
+
+    docSet.registerHandler((docId, newDoc) => {
+      doc = updateCodeMirrorDocs(doc, newDoc, links)
     })
 
     const AutomergeCodeMirror = makeAutomergeCodeMirror<TestDoc>()
 
     const config: EditorConfiguration = {}
 
-    const getAutomergeDoc = () => doc
-    const setAutomergeDoc = (newDoc: TestDoc) => (doc = newDoc)
+    const getAutomergeDoc = () => docSet.getDoc('id')
+    const setAutomergeDoc = (newDoc: TestDoc) => docSet.setDoc('id', newDoc)
 
     ReactDOM.render(
       <div>
@@ -53,13 +62,13 @@ describe('<AutomergeCodeMirror/>', () => {
 
     await new Promise(resolve => setTimeout(resolve, 1))
 
-    let doc2: TestDoc = Automerge.change(doc, mdoc => {
-      mdoc.text1.insertAt!(0, ...'TEXT1')
-      mdoc.text2.insertAt!(0, ...'TEXT2')
-    })
-    // TODO: Use a DocSet with a handler, to mimic incoming network changes
-
-    doc = updateCodeMirrorDocs(doc, doc2, links)
+    // Mimic incoming change
+    setAutomergeDoc(
+      Automerge.change(getAutomergeDoc(), mdoc => {
+        mdoc.text1.insertAt!(0, ...'TEXT1')
+        mdoc.text2.insertAt!(0, ...'TEXT2')
+      })
+    )
 
     const codeMirrors: Editor[] = Array.from(
       div.querySelectorAll('.CodeMirror')
@@ -68,8 +77,8 @@ describe('<AutomergeCodeMirror/>', () => {
 
     assert.deepStrictEqual(strings, ['TEXT1', 'TEXT2'])
 
+    // Mimic local edit
     codeMirrors[0].setValue('NEW')
-
-    assert.deepStrictEqual(doc.text1.join(''), 'NEW')
+    assert.deepStrictEqual(getAutomergeDoc().text1.join(''), 'NEW')
   })
 })

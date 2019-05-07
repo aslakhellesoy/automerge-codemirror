@@ -2,7 +2,7 @@ import * as Automerge from 'automerge'
 import * as CodeMirror from 'codemirror'
 
 /**
- * Applies CodeMirror edits and returns a new Automerge Doc
+ * Applies CodeMirror changes and returns a new Automerge Doc
  *
  * @param doc the current doc
  * @param getText a function that returns a Text object

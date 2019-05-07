@@ -1,6 +1,5 @@
 import Automerge, { Diff } from 'automerge'
 import { Link } from './types'
-import { Doc } from 'codemirror'
 
 /**
  * Applies the diff between two Automerge documents to CodeMirror instances
@@ -17,7 +16,7 @@ export default function updateCodeMirrorDocs<T>(
   const diff = Automerge.diff(oldDoc, newDoc)
 
   for (const op of diff) {
-    const codeMirror = findCodeMirrorDoc(oldDoc, newDoc, links, op)
+    const codeMirror = findCodeMirrorDoc(newDoc, links, op)
     if (!codeMirror) continue
 
     switch (op.action) {
@@ -39,11 +38,10 @@ export default function updateCodeMirrorDocs<T>(
 }
 
 function findCodeMirrorDoc<T>(
-  oldDoc: T,
   newDoc: T,
   links: Set<Link<T>>,
   op: Diff
-): Doc | undefined {
+): CodeMirror.Doc | undefined {
   let codeMirrorDoc
   for (const link of links) {
     const text = link.getText(newDoc)

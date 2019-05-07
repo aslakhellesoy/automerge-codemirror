@@ -6,7 +6,7 @@ import CodeMirror, {
   EditorConfiguration,
 } from 'codemirror'
 import React, { useEffect } from 'react'
-import updateAutomerge from './updateAutomergeDoc'
+import updateAutomergeDoc from './updateAutomergeDoc'
 
 interface Props<T> {
   links: Set<Link<T>>
@@ -28,7 +28,7 @@ export default function makeAutomergeCodeMirror<T>(): React.FunctionComponent<
       const changeHandler = (editor: Editor, change: EditorChange) => {
         const automergeChange = change.origin === 'automerge'
         if (!automergeChange) {
-          const doc = updateAutomerge(
+          const doc = updateAutomergeDoc(
             getAutomergeDoc(),
             getText,
             editor.getDoc(),
