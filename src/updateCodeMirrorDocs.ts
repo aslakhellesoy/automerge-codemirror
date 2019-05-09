@@ -1,5 +1,6 @@
-import Automerge, { Diff } from 'automerge'
+import { Diff, diff, getObjectId } from 'automerge'
 import { Link } from './types'
+import Mutex from './Mutex'
 
 /**
  * Applies the diff between two Automerge documents to CodeMirror instances
@@ -7,28 +8,34 @@ import { Link } from './types'
  * @param oldDoc
  * @param newDoc
  * @param links
+ * @param mutex
  */
 export default function updateCodeMirrorDocs<T>(
   oldDoc: T,
   newDoc: T,
-  links: Set<Link<T>>
+  links: Set<Link<T>>,
+  mutex: Mutex
 ): T {
-  const diff = Automerge.diff(oldDoc, newDoc)
+  if (mutex.locked) {
+    return newDoc
+  }
+  const diffs = diff(oldDoc, newDoc)
 
-  for (const op of diff) {
-    const codeMirror = findCodeMirrorDoc(newDoc, links, op)
-    if (!codeMirror) continue
+  for (const d of diffs) {
+    const link = findLink(newDoc, links, d)
+    if (!link) continue
+    const codeMirrorDoc = link.codeMirror.getDoc()
 
-    switch (op.action) {
+    switch (d.action) {
       case 'insert': {
-        const fromPos = codeMirror.posFromIndex(op.index!)
-        codeMirror.replaceRange(op.value, fromPos, undefined, 'automerge')
+        const fromPos = codeMirrorDoc.posFromIndex(d.index!)
+        codeMirrorDoc.replaceRange(d.value, fromPos, undefined, 'automerge')
         break
       }
       case 'remove': {
-        const fromPos = codeMirror.posFromIndex(op.index!)
-        const toPos = codeMirror.posFromIndex(op.index! + 1)
-        codeMirror.replaceRange('', fromPos, toPos, 'automerge')
+        const fromPos = codeMirrorDoc.posFromIndex(d.index!)
+        const toPos = codeMirrorDoc.posFromIndex(d.index! + 1)
+        codeMirrorDoc.replaceRange('', fromPos, toPos, 'automerge')
         break
       }
     }
@@ -37,19 +44,13 @@ export default function updateCodeMirrorDocs<T>(
   return newDoc
 }
 
-function findCodeMirrorDoc<T>(
-  newDoc: T,
-  links: Set<Link<T>>,
-  op: Diff
-): CodeMirror.Doc | undefined {
-  let codeMirrorDoc
+function findLink<T>(newDoc: T, links: Set<Link<T>>, op: Diff): Link<T> | null {
   for (const link of links) {
     const text = link.getText(newDoc)
-    const textObjectId = Automerge.getObjectId(text)
+    const textObjectId = getObjectId(text)
     if (op.obj === textObjectId) {
-      codeMirrorDoc = link.codeMirror.getDoc()
-      break
+      return link
     }
   }
-  return codeMirrorDoc
+  return null
 }

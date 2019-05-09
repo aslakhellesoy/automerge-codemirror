@@ -1,15 +1,17 @@
 import assert from 'assert'
 import './codeMirrorEnv'
-import Automerge from 'automerge'
-import updateAutomerge from '../src/updateAutomergeDoc'
+import { change, Connection, DocSet, init, Text } from 'automerge'
 import CodeMirror from 'codemirror'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
+import { Link } from '../src/types'
+import makeCodeMirrorChangeHandler from '../src/makeCodeMirrorChangeHandler'
+import Mutex from '../src/Mutex'
 
 interface TestDoc {
-  text: Automerge.Text
+  text: Text
 }
 
-const getText = (doc: TestDoc): Automerge.Text => doc.text
+const getText = (doc: TestDoc): Text => doc.text
 
 describe('concurrent editing', () => {
   let leftDiv: HTMLDivElement
@@ -22,26 +24,24 @@ describe('concurrent editing', () => {
   })
 
   it('syncs', () => {
-    let leftConnection: Automerge.Connection<TestDoc>
-    let rightConnection: Automerge.Connection<TestDoc>
+    let leftConnection: Connection<TestDoc>
+    let rightConnection: Connection<TestDoc>
 
-    const leftDocSet = new Automerge.DocSet<TestDoc>()
-    leftConnection = new Automerge.Connection<TestDoc>(leftDocSet, msg => {
-      // console.log('l->r', JSON.stringify(msg, null, 2))
+    const leftDocSet = new DocSet<TestDoc>()
+    leftConnection = new Connection<TestDoc>(leftDocSet, msg => {
       rightConnection.receiveMsg(msg)
     })
 
-    const rightDocSet = new Automerge.DocSet<TestDoc>()
-    rightConnection = new Automerge.Connection<TestDoc>(rightDocSet, msg => {
-      // console.log('r->l', JSON.stringify(msg, null, 2))
+    const rightDocSet = new DocSet<TestDoc>()
+    rightConnection = new Connection<TestDoc>(rightDocSet, msg => {
       leftConnection.receiveMsg(msg)
     })
 
     leftConnection.open()
     rightConnection.open()
 
-    let left: TestDoc = Automerge.change(Automerge.init(), doc => {
-      doc.text = new Automerge.Text()
+    let left: TestDoc = change(init(), doc => {
+      doc.text = new Text()
     })
     leftDocSet.setDoc('id', left)
 
@@ -49,70 +49,50 @@ describe('concurrent editing', () => {
 
     assert.strictEqual(right.text.join(''), left.text.join(''))
 
-    let processingCodeMirrorChangeLeft = false
     const leftCodeMirror = CodeMirror(leftDiv)
-    leftCodeMirror.on('change', (editor, change) => {
-      if (change.origin === 'automerge') return
-      processingCodeMirrorChangeLeft = true
-      leftDocSet.setDoc(
-        'id',
-        updateAutomerge(
-          leftDocSet.getDoc('id'),
-          getText,
-          editor.getDoc(),
-          change
-        )
-      )
-      processingCodeMirrorChangeLeft = false
-    })
+    const leftLink: Link<TestDoc> = {
+      codeMirror: leftCodeMirror,
+      getText,
+    }
 
-    const leftLinks = new Set([
-      {
-        codeMirror: leftCodeMirror,
-        getText,
-      },
-    ])
+    const leftMutex = new Mutex()
+
+    const leftCodeMirrorChangeHandler = makeCodeMirrorChangeHandler(
+      () => leftDocSet.getDoc('id'),
+      getText,
+      doc => leftDocSet.setDoc('id', doc),
+      leftMutex
+    )
+
+    leftCodeMirror.on('change', leftCodeMirrorChangeHandler)
+
+    const leftLinks = new Set([leftLink])
 
     leftDocSet.registerHandler((_, newDoc) => {
-      if (processingCodeMirrorChangeLeft) {
-        left = newDoc
-        return
-      }
-      updateCodeMirrorDocs(left, newDoc, leftLinks)
-      left = newDoc
+      left = updateCodeMirrorDocs(left, newDoc, leftLinks, leftMutex)
     })
 
-    let processingCodeMirrorChangeRight = false
-    const rightCodeMirror = CodeMirror(leftDiv)
-    rightCodeMirror.on('change', (editor, change) => {
-      if (change.origin === 'automerge') return
-      processingCodeMirrorChangeRight = true
-      rightDocSet.setDoc(
-        'id',
-        updateAutomerge(
-          rightDocSet.getDoc('id'),
-          getText,
-          editor.getDoc(),
-          change
-        )
-      )
-      processingCodeMirrorChangeRight = false
-    })
+    const rightCodeMirror = CodeMirror(rightDiv)
+    const rightLink: Link<TestDoc> = {
+      codeMirror: rightCodeMirror,
+      getText,
+    }
 
-    const rightLinks = new Set([
-      {
-        codeMirror: rightCodeMirror,
-        getText,
-      },
-    ])
+    const rightMutex = new Mutex()
+
+    const rightCodeMirrorChangeHandler = makeCodeMirrorChangeHandler(
+      () => rightDocSet.getDoc('id'),
+      getText,
+      doc => rightDocSet.setDoc('id', doc),
+      rightMutex
+    )
+
+    rightCodeMirror.on('change', rightCodeMirrorChangeHandler)
+
+    const rightLinks = new Set([rightLink])
 
     rightDocSet.registerHandler((_, newDoc) => {
-      if (processingCodeMirrorChangeRight) {
-        right = newDoc
-        return
-      }
-      updateCodeMirrorDocs(right, newDoc, rightLinks)
-      right = newDoc
+      right = updateCodeMirrorDocs(right, newDoc, rightLinks, rightMutex)
     })
 
     leftConnection.close()

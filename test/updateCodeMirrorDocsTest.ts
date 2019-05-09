@@ -4,6 +4,7 @@ import Automerge from 'automerge'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
 import CodeMirror from 'codemirror'
 import { randomPositiveInt, randomString } from './random'
+import Mutex from '../src/Mutex'
 
 interface TestDoc {
   text: Automerge.Text
@@ -34,12 +35,16 @@ describe('updateCodeMirrorDocs', () => {
       {
         codeMirror: codeMirror,
         getText,
+        processingEditorChange: false,
       },
     ])
-    updateCodeMirrorDocs(doc1, doc2, links)
+
+    const mutex = new Mutex()
+
+    updateCodeMirrorDocs(doc1, doc2, links, mutex)
     assert.deepStrictEqual(codeMirror.getValue(), doc2.text.join(''))
 
-    updateCodeMirrorDocs(doc2, doc3, links)
+    updateCodeMirrorDocs(doc2, doc3, links, mutex)
     assert.deepStrictEqual(codeMirror.getValue(), doc3.text.join(''))
   })
 
@@ -55,12 +60,15 @@ describe('updateCodeMirrorDocs', () => {
         {
           codeMirror: codeMirror,
           getText,
+          processingEditorChange: false,
         },
       ])
 
+      const mutex = new Mutex()
+
       for (let t = 0; t < 10; t++) {
         const newDoc = monkeyModify(doc)
-        updateCodeMirrorDocs(doc, newDoc, links)
+        updateCodeMirrorDocs(doc, newDoc, links, mutex)
         doc = newDoc
       }
 

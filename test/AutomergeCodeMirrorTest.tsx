@@ -1,16 +1,17 @@
 import './codeMirrorEnv'
+import assert from 'assert'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Editor, EditorConfiguration } from 'codemirror'
+import { change, DocSet, init, Text } from 'automerge'
 import { Link } from '../src/types'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
-import Automerge, { DocSet } from 'automerge'
-import assert from 'assert'
-import makeAutomergeCodeMirror from '../src/makeAutomergeCodeMirror'
+import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
+import Mutex from '../src/Mutex'
 
 interface TestDoc {
-  text1: Automerge.Text
-  text2: Automerge.Text
+  text1: Text
+  text2: Text
 }
 
 describe('<AutomergeCodeMirror/>', () => {
@@ -20,20 +21,20 @@ describe('<AutomergeCodeMirror/>', () => {
     const links = new Set<Link<TestDoc>>()
 
     const docSet = new DocSet<TestDoc>()
-    let doc: TestDoc = Automerge.init()
+    let doc: TestDoc = init()
     docSet.setDoc(
       'id',
-      Automerge.change(doc, mdoc => {
-        mdoc.text1 = new Automerge.Text()
-        mdoc.text2 = new Automerge.Text()
+      change(doc, mdoc => {
+        mdoc.text1 = new Text()
+        mdoc.text2 = new Text()
       })
     )
 
-    docSet.registerHandler((docId, newDoc) => {
-      doc = updateCodeMirrorDocs(doc, newDoc, links)
-    })
+    const mutex = new Mutex()
 
-    const AutomergeCodeMirror = makeAutomergeCodeMirror<TestDoc>()
+    docSet.registerHandler((docId, newDoc) => {
+      doc = updateCodeMirrorDocs(doc, newDoc, links, mutex)
+    })
 
     const config: EditorConfiguration = {}
 
@@ -42,19 +43,21 @@ describe('<AutomergeCodeMirror/>', () => {
 
     ReactDOM.render(
       <div>
-        <AutomergeCodeMirror
+        <AutomergeCodeMirror<TestDoc>
           links={links}
           getAutomergeDoc={getAutomergeDoc}
           getText={doc => doc.text1}
-          config={config}
+          editorConfiguration={config}
           setAutomergeDoc={setAutomergeDoc}
+          mutex={mutex}
         />
-        <AutomergeCodeMirror
+        <AutomergeCodeMirror<TestDoc>
           links={links}
           getAutomergeDoc={getAutomergeDoc}
           getText={doc => doc.text2}
-          config={config}
+          editorConfiguration={config}
           setAutomergeDoc={setAutomergeDoc}
+          mutex={mutex}
         />
       </div>,
       div
@@ -64,7 +67,7 @@ describe('<AutomergeCodeMirror/>', () => {
 
     // Mimic incoming change
     setAutomergeDoc(
-      Automerge.change(getAutomergeDoc(), mdoc => {
+      change(getAutomergeDoc(), mdoc => {
         mdoc.text1.insertAt!(0, ...'TEXT1')
         mdoc.text2.insertAt!(0, ...'TEXT2')
       })
