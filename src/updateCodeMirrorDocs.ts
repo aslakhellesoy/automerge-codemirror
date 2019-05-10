@@ -16,7 +16,7 @@ export default function updateCodeMirrorDocs<T>(
   links: Set<Link<T>>,
   mutex: Mutex
 ): T {
-  if (mutex.locked) {
+  if (mutex.locked || !oldDoc) {
     return newDoc
   }
   const diffs = diff(oldDoc, newDoc)

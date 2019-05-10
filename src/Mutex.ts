@@ -1,3 +1,6 @@
+/**
+ * This mutex
+ */
 export default class Mutex {
   private _locked: boolean
 
