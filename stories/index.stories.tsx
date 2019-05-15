@@ -8,10 +8,11 @@ import 'codemirror/theme/material.css'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 
-function make(docSet: DocSet<Pad>, doc?: Pad) {
-  const watchableDoc = new DocSetWatchableDoc<Pad>(docSet, 'id')
+function make(watchableDoc: DocSetWatchableDoc<Pad>) {
   const mutex = new Mutex()
   const links = new Set<Link<Pad>>()
+
+  let doc = watchableDoc.get()
   watchableDoc.registerHandler(newDoc => {
     doc = updateCodeMirrorDocs(doc, newDoc, links, mutex)
   })
@@ -25,13 +26,11 @@ storiesOf('Collaboration', module).add(
     const docSetA = new DocSet<Pad>()
     const docSetB = new DocSet<Pad>()
 
-    const { watchableDoc: watchableDocA, links: linksA, mutex: mutexA } = make(
-      docSetA
-    )
+    const watchableDocA = new DocSetWatchableDoc<Pad>(docSetA, 'id')
+    const watchableDocB = new DocSetWatchableDoc<Pad>(docSetB, 'id')
 
-    const { watchableDoc: watchableDocB, links: linksB, mutex: mutexB } = make(
-      docSetB
-    )
+    const { links: linksA, mutex: mutexA } = make(watchableDocA)
+    const { links: linksB, mutex: mutexB } = make(watchableDocB)
 
     let connectionA: Connection<Pad>
     let connectionB: Connection<Pad>
