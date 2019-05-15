@@ -8,38 +8,30 @@ import 'codemirror/theme/material.css'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 
-function make(doc?: Pad) {
-  const docSet = new DocSet<Pad>()
+function make(docSet: DocSet<Pad>, doc?: Pad) {
   const watchableDoc = new DocSetWatchableDoc<Pad>(docSet, 'id')
-
-  if (doc) {
-    watchableDoc.set(doc)
-  }
-
   const mutex = new Mutex()
   const links = new Set<Link<Pad>>()
   watchableDoc.registerHandler(newDoc => {
     doc = updateCodeMirrorDocs(doc, newDoc, links, mutex)
   })
 
-  return { docSet, watchableDoc, links, mutex }
+  return { watchableDoc, links, mutex }
 }
 
 storiesOf('Collaboration', module).add(
   'Multiple editors linked to a single Automerge doc',
   () => {
-    const {
-      docSet: docSetA,
-      watchableDoc: watchableDocA,
-      links: linksA,
-      mutex: mutexA,
-    } = make(change(init(), (mdoc: Pad) => (mdoc.sheets = [])))
-    const {
-      docSet: docSetB,
-      watchableDoc: watchableDocB,
-      links: linksB,
-      mutex: mutexB,
-    } = make()
+    const docSetA = new DocSet<Pad>()
+    const docSetB = new DocSet<Pad>()
+
+    const { watchableDoc: watchableDocA, links: linksA, mutex: mutexA } = make(
+      docSetA
+    )
+
+    const { watchableDoc: watchableDocB, links: linksB, mutex: mutexB } = make(
+      docSetB
+    )
 
     let connectionA: Connection<Pad>
     let connectionB: Connection<Pad>
@@ -49,6 +41,8 @@ storiesOf('Collaboration', module).add(
 
     connectionA.open()
     connectionB.open()
+
+    watchableDocA.set(change(init(), (draft: Pad) => (draft.sheets = [])))
 
     return (
       <div>
