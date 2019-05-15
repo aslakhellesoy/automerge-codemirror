@@ -1,13 +1,13 @@
-import React, { FunctionComponent } from 'react'
-import { EditorConfiguration } from 'codemirror'
 import { change, Text, WatchableDoc } from 'automerge'
+import { EditorConfiguration } from 'codemirror'
+import React, { FunctionComponent } from 'react'
 import {
   AutomergeCodeMirror,
   Link,
   Mutex,
   useAutomergeDoc,
   useCodeMirrorUpdater,
-} from '../../index'
+} from '../../src'
 
 interface Pad {
   sheets: Text[]

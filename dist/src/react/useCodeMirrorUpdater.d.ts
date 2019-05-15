@@ -1,6 +1,6 @@
-import { Mutex } from '../../index'
-import Link from '../Link'
 import { WatchableDoc } from 'automerge'
+import Link from '../Link'
+import Mutex from '../Mutex'
 export default function useCodeMirrorUpdater<T>(
   watchableDoc: WatchableDoc<T>,
   mutex: Mutex,

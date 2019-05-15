@@ -4,7 +4,7 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 
 import { change, Connection, DocSet, init } from 'automerge'
-import { DocSetWatchableDoc, Mutex, Link } from '..'
+import { DocSetWatchableDoc, Mutex, Link } from '../src'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 

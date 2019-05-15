@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
-import { Mutex, updateCodeMirrorDocs } from '../../index'
-import Link from '../Link'
 import { WatchableDoc } from 'automerge'
+import { useEffect } from 'react'
+import Link from '../Link'
+import Mutex from '../Mutex'
+import updateCodeMirrorDocs from '../updateCodeMirrorDocs'
 
 export default function useCodeMirrorUpdater<T>(
   watchableDoc: WatchableDoc<T>,
