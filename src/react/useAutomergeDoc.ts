@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { WatchableDoc } from 'automerge'
 
-export default function useAutomerge<T>(watchableDoc: WatchableDoc<T>): T {
+export default function useAutomergeDoc<T>(watchableDoc: WatchableDoc<T>): T {
   const [doc, setDoc] = useState(watchableDoc.get())
 
   useEffect(() => {

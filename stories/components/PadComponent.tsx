@@ -1,7 +1,13 @@
 import React, { FunctionComponent } from 'react'
 import { EditorConfiguration } from 'codemirror'
 import { change, Text, WatchableDoc } from 'automerge'
-import { Link, AutomergeCodeMirror, Mutex, useAutomerge } from '../../index'
+import {
+  AutomergeCodeMirror,
+  Link,
+  Mutex,
+  useAutomergeDoc,
+  useCodeMirrorUpdater,
+} from '../../index'
 
 interface Pad {
   sheets: Text[]
@@ -9,16 +15,17 @@ interface Pad {
 
 interface Props {
   watchableDoc: WatchableDoc<Pad>
-  links: Set<Link<Pad>>
   mutex: Mutex
+  links: Set<Link<Pad>>
 }
 
 const PadComponent: FunctionComponent<Props> = ({
   watchableDoc,
-  links,
   mutex,
+  links,
 }) => {
-  const doc = useAutomerge(watchableDoc)
+  const doc = useAutomergeDoc(watchableDoc)
+  useCodeMirrorUpdater(watchableDoc, mutex, links)
 
   const editorConfiguration: EditorConfiguration = {
     viewportMargin: Infinity,

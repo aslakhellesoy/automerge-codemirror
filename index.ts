@@ -4,7 +4,8 @@ import DocSetWatchableDoc from './src/DocSetWatchableDoc'
 import Mutex from './src/Mutex'
 import Link from './src/Link'
 import AutomergeCodeMirror from './src/react/AutomergeCodeMirror'
-import useAutomerge from './src/react/useAutomerge'
+import useAutomergeDoc from './src/react/useAutomergeDoc'
+import useCodeMirrorUpdater from './src/react/useCodeMirrorUpdater'
 
 export {
   updateAutomergeDoc,
@@ -13,5 +14,6 @@ export {
   Mutex,
   Link,
   AutomergeCodeMirror,
-  useAutomerge,
+  useAutomergeDoc,
+  useCodeMirrorUpdater,
 }
