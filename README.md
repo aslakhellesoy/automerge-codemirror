@@ -21,6 +21,11 @@ Automerge-CodeMirror can be used with both JavaScript and TypeScript.
 
     yarn storybook
 
+![example](./example.gif)
+
+What you see above is 3 Automerge documents synchronised without a network, but it works equally
+well over a network.
+
 ## General Usage
 
 The Automerge <-> CodeMirror synchronisation happens in the `updateAutomergeDoc` and `updateCodeMirrorDocs` functions.
