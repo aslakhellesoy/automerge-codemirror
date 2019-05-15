@@ -8,6 +8,7 @@ import Link from '../src/Link'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
 import AutomergeCodeMirror from '../src/react/AutomergeCodeMirror'
 import Mutex from '../src/Mutex'
+import DocSetWatchableDoc from '../src/DocSetWatchableDoc'
 
 interface TestDoc {
   text1: Text
@@ -21,6 +22,7 @@ describe('<AutomergeCodeMirror/>', () => {
     const links = new Set<Link<TestDoc>>()
 
     const docSet = new DocSet<TestDoc>()
+    const watchableDoc = new DocSetWatchableDoc(docSet, 'id')
     let doc: TestDoc = init()
     docSet.setDoc(
       'id',
@@ -38,25 +40,20 @@ describe('<AutomergeCodeMirror/>', () => {
 
     const config: EditorConfiguration = {}
 
-    const getAutomergeDoc = () => docSet.getDoc('id')
-    const setAutomergeDoc = (newDoc: TestDoc) => docSet.setDoc('id', newDoc)
-
     ReactDOM.render(
       <div>
         <AutomergeCodeMirror<TestDoc>
           links={links}
-          getAutomergeDoc={getAutomergeDoc}
+          watchableDoc={watchableDoc}
           getText={doc => doc.text1}
           editorConfiguration={config}
-          setAutomergeDoc={setAutomergeDoc}
           mutex={mutex}
         />
         <AutomergeCodeMirror<TestDoc>
           links={links}
-          getAutomergeDoc={getAutomergeDoc}
+          watchableDoc={watchableDoc}
           getText={doc => doc.text2}
           editorConfiguration={config}
-          setAutomergeDoc={setAutomergeDoc}
           mutex={mutex}
         />
       </div>,
@@ -66,10 +63,10 @@ describe('<AutomergeCodeMirror/>', () => {
     await new Promise(resolve => setTimeout(resolve, 1))
 
     // Mimic incoming change
-    setAutomergeDoc(
-      change(getAutomergeDoc(), mdoc => {
-        mdoc.text1.insertAt!(0, ...'TEXT1')
-        mdoc.text2.insertAt!(0, ...'TEXT2')
+    watchableDoc.set(
+      change(watchableDoc.get(), draft => {
+        draft.text1.insertAt!(0, ...'TEXT1')
+        draft.text2.insertAt!(0, ...'TEXT2')
       })
     )
 
@@ -82,6 +79,6 @@ describe('<AutomergeCodeMirror/>', () => {
 
     // Mimic local edit
     codeMirrors[0].setValue('NEW')
-    assert.deepStrictEqual(getAutomergeDoc().text1.join(''), 'NEW')
+    assert.deepStrictEqual(watchableDoc.get().text1.join(''), 'NEW')
   })
 })

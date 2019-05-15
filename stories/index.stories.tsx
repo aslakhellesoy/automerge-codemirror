@@ -1,12 +1,12 @@
-import React from 'react'
 import { storiesOf } from '@storybook/react'
-import { change, Connection, DocSet, init } from 'automerge'
-import { DocSetWatchableDoc, Mutex } from '..'
+import React from 'react'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
+
+import { change, Connection, DocSet, init } from 'automerge'
+import { DocSetWatchableDoc, Mutex, Link } from '..'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
-import Link from '../src/Link'
 
 storiesOf('Collaboration', module).add(
   'Multiple editors linked to a single Automerge doc',

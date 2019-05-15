@@ -1,4 +1,4 @@
-import Automerge from 'automerge'
+import { WatchableDoc, Text } from 'automerge'
 import CodeMirror, { EditorConfiguration } from 'codemirror'
 import React from 'react'
 import makeCodeMirrorChangeHandler from '../makeCodeMirrorChangeHandler'
@@ -6,9 +6,8 @@ import Link from '../Link'
 import Mutex from '../Mutex'
 
 interface Props<T> {
-  getAutomergeDoc: () => T
-  setAutomergeDoc: (doc: T) => void
-  getText: (doc: T) => Automerge.Text
+  watchableDoc: WatchableDoc<T>
+  getText: (doc: T) => Text
   links: Set<Link<T>>
   mutex: Mutex
   editorConfiguration: EditorConfiguration
@@ -22,8 +21,7 @@ export default class AutomergeCodeMirror<T> extends React.PureComponent<
 
   componentDidMount(): void {
     const {
-      getAutomergeDoc,
-      setAutomergeDoc,
+      watchableDoc,
       getText,
       links,
       mutex,
@@ -31,7 +29,7 @@ export default class AutomergeCodeMirror<T> extends React.PureComponent<
     } = this.props
 
     const codeMirror = CodeMirror(this.codeMirrorDiv!, editorConfiguration)
-    codeMirror.setValue(getText(getAutomergeDoc()).join(''))
+    codeMirror.setValue(getText(watchableDoc.get()).join(''))
 
     const link: Link<T> = {
       codeMirror,
@@ -41,9 +39,9 @@ export default class AutomergeCodeMirror<T> extends React.PureComponent<
     links.add(link)
 
     const changeHandler = makeCodeMirrorChangeHandler(
-      getAutomergeDoc,
+      () => watchableDoc.get(),
       getText,
-      setAutomergeDoc,
+      doc => watchableDoc.set(doc),
       mutex
     )
     codeMirror.on('change', changeHandler)

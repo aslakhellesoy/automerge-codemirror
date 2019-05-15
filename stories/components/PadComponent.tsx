@@ -34,8 +34,6 @@ const PadComponent: FunctionComponent<Props> = ({
       Tab: false,
     },
   }
-  const getAutomergeDoc = () => watchableDoc.get()
-  const setAutomergeDoc = (doc: Pad) => watchableDoc.set(doc)
 
   const createPad = () => {
     watchableDoc.set(
@@ -52,8 +50,7 @@ const PadComponent: FunctionComponent<Props> = ({
       {((doc && doc.sheets) || []).map((pad, i) => (
         <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
           <AutomergeCodeMirror
-            getAutomergeDoc={getAutomergeDoc}
-            setAutomergeDoc={setAutomergeDoc}
+            watchableDoc={watchableDoc}
             getText={doc => doc.sheets[i]}
             links={links}
             mutex={mutex}

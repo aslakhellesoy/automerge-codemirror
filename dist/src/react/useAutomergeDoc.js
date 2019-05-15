@@ -23,7 +23,7 @@ var __read =
   }
 Object.defineProperty(exports, '__esModule', { value: true })
 var react_1 = require('react')
-function useAutomerge(watchableDoc) {
+function useAutomergeDoc(watchableDoc) {
   var _a = __read(react_1.useState(watchableDoc.get()), 2),
     doc = _a[0],
     setDoc = _a[1]
@@ -35,5 +35,5 @@ function useAutomerge(watchableDoc) {
   }, [])
   return doc
 }
-exports.default = useAutomerge
-//# sourceMappingURL=useAutomerge.js.map
+exports.default = useAutomergeDoc
+//# sourceMappingURL=useAutomergeDoc.js.map

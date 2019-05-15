@@ -16,5 +16,5 @@ export default function useCodeMirrorUpdater<T>(
     watchableDoc.registerHandler(handler)
 
     return () => watchableDoc.unregisterHandler(handler)
-  }, [])
+  }, [watchableDoc, mutex, links])
 }

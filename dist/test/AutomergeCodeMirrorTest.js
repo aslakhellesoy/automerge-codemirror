@@ -175,17 +175,17 @@ var AutomergeCodeMirror_1 = __importDefault(
   require('../src/react/AutomergeCodeMirror')
 )
 var Mutex_1 = __importDefault(require('../src/Mutex'))
+var DocSetWatchableDoc_1 = __importDefault(require('../src/DocSetWatchableDoc'))
 describe('<AutomergeCodeMirror/>', function() {
   it('renders an editor', function() {
     return __awaiter(_this, void 0, void 0, function() {
       var div,
         links,
         docSet,
+        watchableDoc,
         doc,
         mutex,
         config,
-        getAutomergeDoc,
-        setAutomergeDoc,
         codeMirrors,
         strings
       return __generator(this, function(_a) {
@@ -195,6 +195,7 @@ describe('<AutomergeCodeMirror/>', function() {
             document.body.appendChild(div)
             links = new Set()
             docSet = new automerge_1.DocSet()
+            watchableDoc = new DocSetWatchableDoc_1.default(docSet, 'id')
             doc = automerge_1.init()
             docSet.setDoc(
               'id',
@@ -208,34 +209,26 @@ describe('<AutomergeCodeMirror/>', function() {
               doc = updateCodeMirrorDocs_1.default(doc, newDoc, links, mutex)
             })
             config = {}
-            getAutomergeDoc = function() {
-              return docSet.getDoc('id')
-            }
-            setAutomergeDoc = function(newDoc) {
-              return docSet.setDoc('id', newDoc)
-            }
             react_dom_1.default.render(
               react_1.default.createElement(
                 'div',
                 null,
                 react_1.default.createElement(AutomergeCodeMirror_1.default, {
                   links: links,
-                  getAutomergeDoc: getAutomergeDoc,
+                  watchableDoc: watchableDoc,
                   getText: function(doc) {
                     return doc.text1
                   },
                   editorConfiguration: config,
-                  setAutomergeDoc: setAutomergeDoc,
                   mutex: mutex,
                 }),
                 react_1.default.createElement(AutomergeCodeMirror_1.default, {
                   links: links,
-                  getAutomergeDoc: getAutomergeDoc,
+                  watchableDoc: watchableDoc,
                   getText: function(doc) {
                     return doc.text2
                   },
                   editorConfiguration: config,
-                  setAutomergeDoc: setAutomergeDoc,
                   mutex: mutex,
                 })
               ),
@@ -251,11 +244,11 @@ describe('<AutomergeCodeMirror/>', function() {
           case 1:
             _a.sent()
             // Mimic incoming change
-            setAutomergeDoc(
-              automerge_1.change(getAutomergeDoc(), function(mdoc) {
+            watchableDoc.set(
+              automerge_1.change(watchableDoc.get(), function(draft) {
                 var _a, _b
-                ;(_a = mdoc.text1).insertAt.apply(_a, __spread([0], 'TEXT1'))
-                ;(_b = mdoc.text2).insertAt.apply(_b, __spread([0], 'TEXT2'))
+                ;(_a = draft.text1).insertAt.apply(_a, __spread([0], 'TEXT1'))
+                ;(_b = draft.text2).insertAt.apply(_b, __spread([0], 'TEXT2'))
               })
             )
             codeMirrors = Array.from(div.querySelectorAll('.CodeMirror')).map(
@@ -270,7 +263,7 @@ describe('<AutomergeCodeMirror/>', function() {
             // Mimic local edit
             codeMirrors[0].setValue('NEW')
             assert_1.default.deepStrictEqual(
-              getAutomergeDoc().text1.join(''),
+              watchableDoc.get().text1.join(''),
               'NEW'
             )
             return [2 /*return*/]

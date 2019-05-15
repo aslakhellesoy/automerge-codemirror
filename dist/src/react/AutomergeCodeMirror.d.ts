@@ -1,12 +1,11 @@
-import Automerge from 'automerge'
+import { WatchableDoc, Text } from 'automerge'
 import { EditorConfiguration } from 'codemirror'
 import React from 'react'
 import Link from '../Link'
 import Mutex from '../Mutex'
 interface Props<T> {
-  getAutomergeDoc: () => T
-  setAutomergeDoc: (doc: T) => void
-  getText: (doc: T) => Automerge.Text
+  watchableDoc: WatchableDoc<T>
+  getText: (doc: T) => Text
   links: Set<Link<T>>
   mutex: Mutex
   editorConfiguration: EditorConfiguration

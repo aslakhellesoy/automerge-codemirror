@@ -41,8 +41,7 @@ var AutomergeCodeMirror = /** @class */ (function(_super) {
   }
   AutomergeCodeMirror.prototype.componentDidMount = function() {
     var _a = this.props,
-      getAutomergeDoc = _a.getAutomergeDoc,
-      setAutomergeDoc = _a.setAutomergeDoc,
+      watchableDoc = _a.watchableDoc,
       getText = _a.getText,
       links = _a.links,
       mutex = _a.mutex,
@@ -51,16 +50,20 @@ var AutomergeCodeMirror = /** @class */ (function(_super) {
       this.codeMirrorDiv,
       editorConfiguration
     )
-    codeMirror.setValue(getText(getAutomergeDoc()).join(''))
+    codeMirror.setValue(getText(watchableDoc.get()).join(''))
     var link = {
       codeMirror: codeMirror,
       getText: getText,
     }
     links.add(link)
     var changeHandler = makeCodeMirrorChangeHandler_1.default(
-      getAutomergeDoc,
+      function() {
+        return watchableDoc.get()
+      },
       getText,
-      setAutomergeDoc,
+      function(doc) {
+        return watchableDoc.set(doc)
+      },
       mutex
     )
     codeMirror.on('change', changeHandler)
