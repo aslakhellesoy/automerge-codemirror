@@ -32,7 +32,7 @@ Object.defineProperty(exports, '__esModule', { value: true })
 var codemirror_1 = __importDefault(require('codemirror'))
 var react_1 = __importDefault(require('react'))
 var makeCodeMirrorChangeHandler_1 = __importDefault(
-  require('./makeCodeMirrorChangeHandler')
+  require('../makeCodeMirrorChangeHandler')
 )
 var AutomergeCodeMirror = /** @class */ (function(_super) {
   __extends(AutomergeCodeMirror, _super)

@@ -1,8 +1,7 @@
-import { Link } from '../../src/types'
-import { AutomergeCodeMirror, Mutex } from '../../index'
-import React, { useEffect, useState } from 'react'
+import React, { FunctionComponent } from 'react'
 import { EditorConfiguration } from 'codemirror'
 import { change, Text, WatchableDoc } from 'automerge'
+import { Link, AutomergeCodeMirror, Mutex, useAutomerge } from '../../index'
 
 interface Pad {
   sheets: Text[]
@@ -14,17 +13,12 @@ interface Props {
   mutex: Mutex
 }
 
-const PadComponent: React.FunctionComponent<Props> = ({
+const PadComponent: FunctionComponent<Props> = ({
   watchableDoc,
   links,
   mutex,
 }) => {
-  const [doc, setDoc] = useState(watchableDoc.get())
-
-  useEffect(() => {
-    watchableDoc.registerHandler(setDoc)
-    return () => watchableDoc.unregisterHandler(setDoc)
-  }, [])
+  const doc = useAutomerge(watchableDoc)
 
   const editorConfiguration: EditorConfiguration = {
     viewportMargin: Infinity,

@@ -1,9 +1,9 @@
-import { Link } from './types'
 import Automerge from 'automerge'
 import CodeMirror, { EditorConfiguration } from 'codemirror'
 import React from 'react'
-import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
-import Mutex from './Mutex'
+import makeCodeMirrorChangeHandler from '../makeCodeMirrorChangeHandler'
+import Link from '../Link'
+import Mutex from '../Mutex'
 
 interface Props<T> {
   getAutomergeDoc: () => T
@@ -14,7 +14,9 @@ interface Props<T> {
   editorConfiguration: EditorConfiguration
 }
 
-class AutomergeCodeMirror<T> extends React.PureComponent<Props<T>> {
+export default class AutomergeCodeMirror<T> extends React.PureComponent<
+  Props<T>
+> {
   private codeMirrorDiv: HTMLDivElement | null
   private unmountCodeMirror: () => void
 
@@ -70,5 +72,3 @@ class AutomergeCodeMirror<T> extends React.PureComponent<Props<T>> {
     )
   }
 }
-
-export default AutomergeCodeMirror

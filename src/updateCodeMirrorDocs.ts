@@ -1,5 +1,5 @@
 import { Diff, diff, getObjectId } from 'automerge'
-import { Link } from './types'
+import Link from './Link'
 import Mutex from './Mutex'
 
 /**

@@ -4,9 +4,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Editor, EditorConfiguration } from 'codemirror'
 import { change, DocSet, init, Text } from 'automerge'
-import { Link } from '../src/types'
+import Link from '../src/Link'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
-import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
+import AutomergeCodeMirror from '../src/react/AutomergeCodeMirror'
 import Mutex from '../src/Mutex'
 
 interface TestDoc {

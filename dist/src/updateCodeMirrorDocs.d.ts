@@ -1,4 +1,4 @@
-import { Link } from './types'
+import Link from './Link'
 import Mutex from './Mutex'
 /**
  * Applies the diff between two Automerge documents to CodeMirror instances

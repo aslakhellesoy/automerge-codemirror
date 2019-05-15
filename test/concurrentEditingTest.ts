@@ -3,7 +3,7 @@ import './codeMirrorEnv'
 import { change, Connection, DocSet, init, Text } from 'automerge'
 import CodeMirror from 'codemirror'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
-import { Link } from '../src/types'
+import Link from '../src/Link'
 import makeCodeMirrorChangeHandler from '../src/makeCodeMirrorChangeHandler'
 import Mutex from '../src/Mutex'
 

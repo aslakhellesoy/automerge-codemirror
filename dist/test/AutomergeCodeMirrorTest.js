@@ -172,7 +172,7 @@ var updateCodeMirrorDocs_1 = __importDefault(
   require('../src/updateCodeMirrorDocs')
 )
 var AutomergeCodeMirror_1 = __importDefault(
-  require('../src/AutomergeCodeMirror')
+  require('../src/react/AutomergeCodeMirror')
 )
 var Mutex_1 = __importDefault(require('../src/Mutex'))
 describe('<AutomergeCodeMirror/>', function() {
