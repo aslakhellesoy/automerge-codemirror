@@ -31,14 +31,15 @@ well over a network.
 The Automerge <-> CodeMirror synchronisation happens in the `updateAutomergeDoc` and `updateCodeMirrorDocs` functions.
 In order to prevent an infinite loop when changes are made, a `Mutex` object must be passed to the `updateCodeMirrorDocs` function.
 
-See unit tests for examples
+See unit tests for examples.
 
 ## React Usage
 
-The `AutomergeCodeMirror` React component encapsulates the `updateAutomergeDoc`, so you don't have to use it directly.
+The `AutomergeCodeMirror` React component encapsulates `updateAutomergeDoc`, so you don't have to use it directly.
 It is a _pure_ component, so it won't rerender (flicker) when the Automerge document changes. It instantiates a new
-native CodeMirror component when it mounts, and register a change handler that will call `updateAutomergeDoc`. This handler
-is automatically unregistered when the component unmounts.
+native CodeMirror component when it mounts, and registers a change handler that will call `updateAutomergeDoc` when
+the user types.
+This handler is automatically unregistered when the component unmounts.
 
 You also have two React hooks at your disposal `useAutomergeDoc` and `useCodeMirrorUpdater`, which handle external updates
 to the Automerge document.
@@ -101,7 +102,6 @@ Now we can use it:
 
 ```tsx
 <PadComponent
-  key={n}
   watchableDoc={watchableDoc}
   mutex={new Mutex()}
   links={new Set<Link<Pad>>()}
