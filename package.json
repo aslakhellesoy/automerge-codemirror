@@ -1,6 +1,6 @@
 {
   "name": "automerge-codemirror",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Automerge plugin for CodeMirror",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
