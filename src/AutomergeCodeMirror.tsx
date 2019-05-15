@@ -6,12 +6,12 @@ import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
 import Mutex from './Mutex'
 
 interface Props<T> {
-  links: Set<Link<T>>
   getAutomergeDoc: () => T
-  getText: (doc: T) => Automerge.Text
-  editorConfiguration: EditorConfiguration
   setAutomergeDoc: (doc: T) => void
+  getText: (doc: T) => Automerge.Text
+  links: Set<Link<T>>
   mutex: Mutex
+  editorConfiguration: EditorConfiguration
 }
 
 class AutomergeCodeMirror<T> extends React.PureComponent<Props<T>> {
@@ -20,12 +20,12 @@ class AutomergeCodeMirror<T> extends React.PureComponent<Props<T>> {
 
   componentDidMount(): void {
     const {
-      links,
       getAutomergeDoc,
-      getText,
-      editorConfiguration,
       setAutomergeDoc,
+      getText,
+      links,
       mutex,
+      editorConfiguration,
     } = this.props
 
     const codeMirror = CodeMirror(this.codeMirrorDiv!, editorConfiguration)

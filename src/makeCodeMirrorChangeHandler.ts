@@ -10,9 +10,8 @@ export default function makeCodeMirrorChangeHandler<T>(
   mutex: Mutex
 ) {
   return (editor: Editor, change: EditorChange) => {
-    const automergeChange = change.origin === 'automerge'
-    mutex.lock()
-    if (!automergeChange) {
+    if (change.origin !== 'automerge') {
+      mutex.lock()
       const doc = updateAutomergeDoc(
         getAutomergeDoc(),
         getText,
@@ -20,7 +19,7 @@ export default function makeCodeMirrorChangeHandler<T>(
         change
       )
       setAutomergeDoc(doc)
+      mutex.release()
     }
-    mutex.release()
   }
 }

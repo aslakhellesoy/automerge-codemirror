@@ -15,8 +15,8 @@ export default function updateAutomergeDoc<T>(
   codeMirrorDoc: Doc,
   editorChange: EditorChange
 ): T {
-  return change(doc, mdoc => {
-    const text = getText(mdoc)
+  return change(doc, draft => {
+    const text = getText(draft)
     if (!text) return
     const startPos = codeMirrorDoc.indexFromPos(editorChange.from)
 
