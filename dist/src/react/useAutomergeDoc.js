@@ -23,6 +23,11 @@ var __read =
   }
 Object.defineProperty(exports, '__esModule', { value: true })
 var react_1 = require('react')
+/**
+ * This hook updates a state variable when {@link watchableDoc} is updated.
+ *
+ * @param watchableDoc the doc to observe
+ */
 function useAutomergeDoc(watchableDoc) {
   var _a = __read(react_1.useState(watchableDoc.get()), 2),
     doc = _a[0],

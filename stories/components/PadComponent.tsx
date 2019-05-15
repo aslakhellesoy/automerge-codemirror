@@ -1,5 +1,4 @@
 import { change, Text, WatchableDoc } from 'automerge'
-import { EditorConfiguration } from 'codemirror'
 import React, { FunctionComponent } from 'react'
 import {
   AutomergeCodeMirror,
@@ -27,15 +26,7 @@ const PadComponent: FunctionComponent<Props> = ({
   const doc = useAutomergeDoc(watchableDoc)
   useCodeMirrorUpdater(watchableDoc, mutex, links)
 
-  const editorConfiguration: EditorConfiguration = {
-    viewportMargin: Infinity,
-    lineWrapping: true,
-    extraKeys: {
-      Tab: false,
-    },
-  }
-
-  const createPad = () => {
+  function createSheet() {
     watchableDoc.set(
       change(doc, draft => {
         if (draft.sheets == undefined) draft.sheets = []
@@ -46,7 +37,7 @@ const PadComponent: FunctionComponent<Props> = ({
 
   return (
     <div>
-      <button onClick={createPad}>New Pad</button>
+      <button onClick={createSheet}>New Sheet</button>
       {((doc && doc.sheets) || []).map((pad, i) => (
         <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
           <AutomergeCodeMirror
@@ -54,7 +45,13 @@ const PadComponent: FunctionComponent<Props> = ({
             getText={doc => doc.sheets[i]}
             links={links}
             mutex={mutex}
-            editorConfiguration={editorConfiguration}
+            editorConfiguration={{
+              viewportMargin: Infinity,
+              lineWrapping: true,
+              extraKeys: {
+                Tab: false,
+              },
+            }}
           />
         </div>
       ))}

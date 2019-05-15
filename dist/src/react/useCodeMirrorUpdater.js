@@ -7,6 +7,13 @@ var __importDefault =
 Object.defineProperty(exports, '__esModule', { value: true })
 var react_1 = require('react')
 var updateCodeMirrorDocs_1 = __importDefault(require('../updateCodeMirrorDocs'))
+/**
+ * This hook updates CodeMirror instances when {@link watchableDoc} changes.
+ *
+ * @param watchableDoc the doc to observe
+ * @param mutex
+ * @param links
+ */
 function useCodeMirrorUpdater(watchableDoc, mutex, links) {
   react_1.useEffect(
     function() {
