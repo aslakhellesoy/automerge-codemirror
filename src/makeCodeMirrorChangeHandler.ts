@@ -1,24 +1,23 @@
-import Automerge from 'automerge'
+import { WatchableDoc, Text } from 'automerge'
 import { Editor, EditorChange } from 'codemirror'
 import updateAutomergeDoc from './updateAutomergeDoc'
 import Mutex from './Mutex'
 
 export default function makeCodeMirrorChangeHandler<T>(
-  getAutomergeDoc: () => T,
-  getText: (doc: T) => Automerge.Text,
-  setAutomergeDoc: (doc: T) => void,
+  watchableDoc: WatchableDoc<T>,
+  getText: (doc: T) => Text,
   mutex: Mutex
 ) {
   return (editor: Editor, change: EditorChange) => {
     if (change.origin !== 'automerge') {
       mutex.lock()
       const doc = updateAutomergeDoc(
-        getAutomergeDoc(),
+        watchableDoc.get(),
         getText,
         editor.getDoc(),
         change
       )
-      setAutomergeDoc(doc)
+      watchableDoc.set(doc)
       mutex.release()
     }
   }

@@ -6,6 +6,7 @@ import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
 import Link from '../src/Link'
 import makeCodeMirrorChangeHandler from '../src/makeCodeMirrorChangeHandler'
 import Mutex from '../src/Mutex'
+import DocSetWatchableDoc from '../src/DocSetWatchableDoc'
 
 interface TestDoc {
   text: Text
@@ -55,12 +56,12 @@ describe('concurrent editing', () => {
       getText,
     }
 
+    const leftWatchableDoc = new DocSetWatchableDoc(leftDocSet, 'id')
     const leftMutex = new Mutex()
 
     const leftCodeMirrorChangeHandler = makeCodeMirrorChangeHandler(
-      () => leftDocSet.getDoc('id'),
+      leftWatchableDoc,
       getText,
-      doc => leftDocSet.setDoc('id', doc),
       leftMutex
     )
 
@@ -68,7 +69,7 @@ describe('concurrent editing', () => {
 
     const leftLinks = new Set([leftLink])
 
-    leftDocSet.registerHandler((_, newDoc) => {
+    leftWatchableDoc.registerHandler(newDoc => {
       left = updateCodeMirrorDocs(left, newDoc, leftLinks, leftMutex)
     })
 
@@ -78,12 +79,12 @@ describe('concurrent editing', () => {
       getText,
     }
 
+    const rightWatchableDoc = new DocSetWatchableDoc(rightDocSet, 'id')
     const rightMutex = new Mutex()
 
     const rightCodeMirrorChangeHandler = makeCodeMirrorChangeHandler(
-      () => rightDocSet.getDoc('id'),
+      rightWatchableDoc,
       getText,
-      doc => rightDocSet.setDoc('id', doc),
       rightMutex
     )
 

@@ -16,6 +16,7 @@ var makeCodeMirrorChangeHandler_1 = __importDefault(
   require('../src/makeCodeMirrorChangeHandler')
 )
 var Mutex_1 = __importDefault(require('../src/Mutex'))
+var DocSetWatchableDoc_1 = __importDefault(require('../src/DocSetWatchableDoc'))
 var getText = function(doc) {
   return doc.text
 }
@@ -52,20 +53,16 @@ describe('concurrent editing', function() {
       codeMirror: leftCodeMirror,
       getText: getText,
     }
+    var leftWatchableDoc = new DocSetWatchableDoc_1.default(leftDocSet, 'id')
     var leftMutex = new Mutex_1.default()
     var leftCodeMirrorChangeHandler = makeCodeMirrorChangeHandler_1.default(
-      function() {
-        return leftDocSet.getDoc('id')
-      },
+      leftWatchableDoc,
       getText,
-      function(doc) {
-        return leftDocSet.setDoc('id', doc)
-      },
       leftMutex
     )
     leftCodeMirror.on('change', leftCodeMirrorChangeHandler)
     var leftLinks = new Set([leftLink])
-    leftDocSet.registerHandler(function(_, newDoc) {
+    leftWatchableDoc.registerHandler(function(newDoc) {
       left = updateCodeMirrorDocs_1.default(left, newDoc, leftLinks, leftMutex)
     })
     var rightCodeMirror = codemirror_1.default(rightDiv)
@@ -73,15 +70,11 @@ describe('concurrent editing', function() {
       codeMirror: rightCodeMirror,
       getText: getText,
     }
+    var rightWatchableDoc = new DocSetWatchableDoc_1.default(rightDocSet, 'id')
     var rightMutex = new Mutex_1.default()
     var rightCodeMirrorChangeHandler = makeCodeMirrorChangeHandler_1.default(
-      function() {
-        return rightDocSet.getDoc('id')
-      },
+      rightWatchableDoc,
       getText,
-      function(doc) {
-        return rightDocSet.setDoc('id', doc)
-      },
       rightMutex
     )
     rightCodeMirror.on('change', rightCodeMirrorChangeHandler)

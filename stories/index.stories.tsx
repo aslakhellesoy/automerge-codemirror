@@ -4,10 +4,10 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 
 import { change, Connection, DocSet, init, WatchableDoc } from 'automerge'
-import { DocSetWatchableDoc, Mutex, Link } from '../src'
+import { DocSetWatchableDoc, Link, Mutex } from '../src'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
-import { Sheet, GridComponent } from './components/GridComponent'
+import { GridComponent, Sheet } from './components/GridComponent'
 
 storiesOf('Collaboration', module).add(
   'Multiple CodeMirrors linked to a single Automerge doc',

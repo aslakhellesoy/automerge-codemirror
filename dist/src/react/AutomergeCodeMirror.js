@@ -57,13 +57,8 @@ var AutomergeCodeMirror = /** @class */ (function(_super) {
     }
     links.add(link)
     var changeHandler = makeCodeMirrorChangeHandler_1.default(
-      function() {
-        return watchableDoc.get()
-      },
+      watchableDoc,
       getText,
-      function(doc) {
-        return watchableDoc.set(doc)
-      },
       mutex
     )
     codeMirror.on('change', changeHandler)

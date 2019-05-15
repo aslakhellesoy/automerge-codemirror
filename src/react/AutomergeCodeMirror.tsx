@@ -39,9 +39,8 @@ export default class AutomergeCodeMirror<T> extends React.PureComponent<
     links.add(link)
 
     const changeHandler = makeCodeMirrorChangeHandler(
-      () => watchableDoc.get(),
+      watchableDoc,
       getText,
-      doc => watchableDoc.set(doc),
       mutex
     )
     codeMirror.on('change', changeHandler)

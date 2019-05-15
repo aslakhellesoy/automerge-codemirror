@@ -6,22 +6,17 @@ var __importDefault =
   }
 Object.defineProperty(exports, '__esModule', { value: true })
 var updateAutomergeDoc_1 = __importDefault(require('./updateAutomergeDoc'))
-function makeCodeMirrorChangeHandler(
-  getAutomergeDoc,
-  getText,
-  setAutomergeDoc,
-  mutex
-) {
+function makeCodeMirrorChangeHandler(watchableDoc, getText, mutex) {
   return function(editor, change) {
     if (change.origin !== 'automerge') {
       mutex.lock()
       var doc = updateAutomergeDoc_1.default(
-        getAutomergeDoc(),
+        watchableDoc.get(),
         getText,
         editor.getDoc(),
         change
       )
-      setAutomergeDoc(doc)
+      watchableDoc.set(doc)
       mutex.release()
     }
   }
