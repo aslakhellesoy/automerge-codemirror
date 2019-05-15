@@ -7,9 +7,10 @@ import { change, Connection, DocSet, init, WatchableDoc } from 'automerge'
 import { DocSetWatchableDoc, Mutex, Link } from '../src'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
+import { Sheet, GridComponent } from './components/GridComponent'
 
 storiesOf('Collaboration', module).add(
-  'Multiple editors linked to a single Automerge doc',
+  'Multiple CodeMirrors linked to a single Automerge doc',
   () => {
     const watchableDocs = createConnectedDocs<Pad>(3, 'someid')
 
@@ -24,6 +25,31 @@ storiesOf('Collaboration', module).add(
             mutex={new Mutex()}
             links={new Set<Link<Pad>>()}
           />
+        ))}
+      </div>
+    )
+  }
+)
+
+storiesOf('Collaboration', module).add(
+  'Grid linked to a single Automerge doc',
+  () => {
+    const watchableDocs = createConnectedDocs<Sheet>(2, 'someid')
+    watchableDocs[0].set(
+      change(
+        init(),
+        (draft: Sheet) =>
+          (draft.grid = [
+            [{ value: 'A' }, { value: 'BBB' }],
+            [{ value: 'CCC' }, { value: 'DDD' }],
+          ])
+      )
+    )
+
+    return (
+      <div>
+        {watchableDocs.map((watchableDoc, n) => (
+          <GridComponent key={n} watchableDoc={watchableDoc} />
         ))}
       </div>
     )
