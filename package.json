@@ -17,12 +17,13 @@
   "dependencies": {
     "@types/react": "^16.8.17",
     "@types/react-dom": "^16.8.4",
-    "automerge": "aslakhellesoy/automerge#01803bd8f963e9dbf13eced6063bc3f15e015f32",
+    "automerge": "aslakhellesoy/automerge#b60e9485d02983230cdb77ca6d2056124b99767a",
     "codemirror": "^5.46.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6"
   },
   "devDependencies": {
+    "@babel/core": "^7.0.0-0",
     "@storybook/addon-actions": "^5.0.11",
     "@storybook/addon-links": "^5.0.11",
     "@storybook/addons": "^5.0.11",
@@ -40,6 +41,7 @@
     "nyc": "^14.1.1",
     "prettier": "^1.17.1",
     "pretty-quick": "^1.10.0",
+    "prop-types": "^15.5.9",
     "react-datasheet": "^1.3.12",
     "ts-node": "^8.1.0",
     "typescript": "^3.4.4",
