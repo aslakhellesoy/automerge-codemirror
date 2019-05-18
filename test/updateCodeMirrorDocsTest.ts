@@ -10,6 +10,10 @@ interface TestDoc {
   text: Automerge.Text
 }
 
+interface TestDocWithManyTexts {
+  texts: Automerge.Text[]
+}
+
 const getText = (doc: TestDoc): Automerge.Text => doc.text
 
 describe('updateCodeMirrorDocs', () => {
@@ -21,12 +25,12 @@ describe('updateCodeMirrorDocs', () => {
 
   it('adds new text', () => {
     const doc1: TestDoc = Automerge.init()
-    const doc2: TestDoc = Automerge.change(doc1, (editableDoc: TestDoc) => {
-      editableDoc.text = new Automerge.Text()
-      editableDoc.text.insertAt!(0, ...'HELLO'.split(''))
+    const doc2: TestDoc = Automerge.change(doc1, draft => {
+      draft.text = new Automerge.Text()
+      draft.text.insertAt!(0, ...'HELLO'.split(''))
     })
-    const doc3: TestDoc = Automerge.change(doc2, (editableDoc: TestDoc) => {
-      editableDoc.text.insertAt!(5, ...'WORLD'.split(''))
+    const doc3: TestDoc = Automerge.change(doc2, draft => {
+      draft.text.insertAt!(5, ...'WORLD'.split(''))
     })
 
     const codeMirror = CodeMirror(div)
@@ -35,7 +39,6 @@ describe('updateCodeMirrorDocs', () => {
       {
         codeMirror: codeMirror,
         getText,
-        processingEditorChange: false,
       },
     ])
 
@@ -48,11 +51,42 @@ describe('updateCodeMirrorDocs', () => {
     assert.deepStrictEqual(codeMirror.getValue(), doc3.text.join(''))
   })
 
+  it('handles a removed text node without crashing', () => {
+    const doc1: TestDocWithManyTexts = Automerge.init()
+    const doc2: TestDocWithManyTexts = Automerge.change(doc1, draft => {
+      draft.texts = []
+      draft.texts.push(new Automerge.Text())
+    })
+
+    const getText = (doc: TestDocWithManyTexts): Automerge.Text => doc.texts[0]
+
+    const codeMirror = CodeMirror(div)
+
+    const links = new Set([
+      {
+        codeMirror: codeMirror,
+        getText,
+      },
+    ])
+
+    const mutex = new Mutex()
+
+    updateCodeMirrorDocs(doc1, doc2, links, mutex)
+    assert.deepStrictEqual(codeMirror.getValue(), doc2.texts[0].join(''))
+
+    const doc3: TestDocWithManyTexts = Automerge.change(doc2, draft => {
+      draft.texts.shift()
+    })
+
+    updateCodeMirrorDocs(doc2, doc3, links, mutex)
+  })
+
   for (let n = 0; n < 10; n++) {
     it(`works with random edits (fuzz test ${n})`, () => {
-      let doc: TestDoc = Automerge.change(Automerge.init(), doc => {
-        doc.text = new Automerge.Text()
-      })
+      let doc: TestDoc = Automerge.change(
+        Automerge.init(),
+        draft => (draft.text = new Automerge.Text())
+      )
 
       const codeMirror = CodeMirror(div)
 

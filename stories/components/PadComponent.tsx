@@ -35,9 +35,20 @@ const PadComponent: FunctionComponent<Props> = ({
     )
   }
 
+  function removeSheet() {
+    watchableDoc.set(
+      change(doc, draft => {
+        if (draft.sheets) {
+          draft.sheets.shift()
+        }
+      })
+    )
+  }
+
   return (
     <div>
       <button onClick={createSheet}>New Sheet</button>
+      <button onClick={removeSheet}>Remove Sheet</button>
       {((doc && doc.sheets) || []).map((pad, i) => (
         <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
           <AutomergeCodeMirror

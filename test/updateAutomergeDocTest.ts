@@ -21,9 +21,7 @@ describe('updateAutomergeDoc', () => {
   it('adds new text', () => {
     const oldDoc: TestDoc = Automerge.change(
       Automerge.init(),
-      (editableDoc: TestDoc) => {
-        editableDoc.text = new Automerge.Text()
-      }
+      draft => (draft.text = new Automerge.Text())
     )
     let newDoc: TestDoc
 
@@ -39,8 +37,8 @@ describe('updateAutomergeDoc', () => {
 
   for (let n = 0; n < 10; n++) {
     it(`works with random edits (fuzz test ${n})`, () => {
-      let doc: TestDoc = Automerge.change(Automerge.init(), doc => {
-        doc.text = new Automerge.Text()
+      let doc: TestDoc = Automerge.change(Automerge.init(), draft => {
+        draft.text = new Automerge.Text()
       })
 
       const codeMirror = CodeMirror(div)

@@ -22,6 +22,7 @@ export default function updateCodeMirrorDocs<T>(
   const diffs = diff(oldDoc, newDoc)
 
   for (const d of diffs) {
+    if (d.type !== 'text') continue
     const link = findLink(newDoc, links, d)
     if (!link) continue
     const codeMirrorDoc = link.codeMirror.getDoc()
