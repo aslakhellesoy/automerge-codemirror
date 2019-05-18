@@ -23,8 +23,8 @@ describe('updateAutomergeDoc', function() {
   it('adds new text', function() {
     var oldDoc = automerge_1.default.change(
       automerge_1.default.init(),
-      function(editableDoc) {
-        editableDoc.text = new automerge_1.default.Text()
+      function(draft) {
+        return (draft.text = new automerge_1.default.Text())
       }
     )
     var newDoc
@@ -43,9 +43,9 @@ describe('updateAutomergeDoc', function() {
   for (var n = 0; n < 10; n++) {
     it('works with random edits (fuzz test ' + n + ')', function() {
       var doc = automerge_1.default.change(automerge_1.default.init(), function(
-        doc
+        draft
       ) {
-        doc.text = new automerge_1.default.Text()
+        draft.text = new automerge_1.default.Text()
       })
       var codeMirror = codemirror_1.default(div)
       codeMirror.on('change', function(editor, change) {

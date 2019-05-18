@@ -54,27 +54,20 @@ describe('updateCodeMirrorDocs', function() {
   })
   it('adds new text', function() {
     var doc1 = automerge_1.default.init()
-    var doc2 = automerge_1.default.change(doc1, function(editableDoc) {
+    var doc2 = automerge_1.default.change(doc1, function(draft) {
       var _a
-      editableDoc.text = new automerge_1.default.Text()
-      ;(_a = editableDoc.text).insertAt.apply(
-        _a,
-        __spread([0], 'HELLO'.split(''))
-      )
+      draft.text = new automerge_1.default.Text()
+      ;(_a = draft.text).insertAt.apply(_a, __spread([0], 'HELLO'.split('')))
     })
-    var doc3 = automerge_1.default.change(doc2, function(editableDoc) {
+    var doc3 = automerge_1.default.change(doc2, function(draft) {
       var _a
-      ;(_a = editableDoc.text).insertAt.apply(
-        _a,
-        __spread([5], 'WORLD'.split(''))
-      )
+      ;(_a = draft.text).insertAt.apply(_a, __spread([5], 'WORLD'.split('')))
     })
     var codeMirror = codemirror_1.default(div)
     var links = new Set([
       {
         codeMirror: codeMirror,
         getText: getText,
-        processingEditorChange: false,
       },
     ])
     var mutex = new Mutex_1.default()
@@ -83,12 +76,39 @@ describe('updateCodeMirrorDocs', function() {
     updateCodeMirrorDocs_1.default(doc2, doc3, links, mutex)
     assert_1.default.deepStrictEqual(codeMirror.getValue(), doc3.text.join(''))
   })
+  it('handles a removed text node without crashing', function() {
+    var doc1 = automerge_1.default.init()
+    var doc2 = automerge_1.default.change(doc1, function(draft) {
+      draft.texts = []
+      draft.texts.push(new automerge_1.default.Text())
+    })
+    var getText = function(doc) {
+      return doc.texts[0]
+    }
+    var codeMirror = codemirror_1.default(div)
+    var links = new Set([
+      {
+        codeMirror: codeMirror,
+        getText: getText,
+      },
+    ])
+    var mutex = new Mutex_1.default()
+    updateCodeMirrorDocs_1.default(doc1, doc2, links, mutex)
+    assert_1.default.deepStrictEqual(
+      codeMirror.getValue(),
+      doc2.texts[0].join('')
+    )
+    var doc3 = automerge_1.default.change(doc2, function(draft) {
+      draft.texts.shift()
+    })
+    updateCodeMirrorDocs_1.default(doc2, doc3, links, mutex)
+  })
   for (var n = 0; n < 10; n++) {
     it('works with random edits (fuzz test ' + n + ')', function() {
       var doc = automerge_1.default.change(automerge_1.default.init(), function(
-        doc
+        draft
       ) {
-        doc.text = new automerge_1.default.Text()
+        return (draft.text = new automerge_1.default.Text())
       })
       var codeMirror = codemirror_1.default(div)
       var links = new Set([

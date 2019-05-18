@@ -35,6 +35,7 @@ function updateCodeMirrorDocs(oldDoc, newDoc, links, mutex) {
       diffs_1_1 = diffs_1.next()
     ) {
       var d = diffs_1_1.value
+      if (d.type !== 'text') continue
       var link = findLink(newDoc, links, d)
       if (!link) continue
       var codeMirrorDoc = link.codeMirror.getDoc()
