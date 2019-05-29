@@ -36,7 +36,10 @@ function useAutomergeDoc(watchableDoc) {
     // Because the useEffect hook is called asynchronously after render, there is
     // a possibility that the watchableDoc changed between the render and the hook being called.
     // We therefore call setDoc directly - the handler will not be notified about the change.
-    setDoc(watchableDoc.get())
+    var currentDoc = watchableDoc.get()
+    if (currentDoc) {
+      setDoc(currentDoc)
+    }
     watchableDoc.registerHandler(setDoc)
     return function() {
       return watchableDoc.unregisterHandler(setDoc)
