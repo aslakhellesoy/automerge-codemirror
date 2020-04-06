@@ -1,4 +1,4 @@
-import { change, Text } from 'automerge'
+import { change, Proxy, Text } from 'automerge'
 import { Doc, EditorChange } from 'codemirror'
 
 /**
@@ -11,11 +11,11 @@ import { Doc, EditorChange } from 'codemirror'
  */
 export default function updateAutomergeDoc<T>(
   doc: T,
-  getText: (doc: T) => Text,
+  getText: (draft: Proxy<T>) => Text,
   codeMirrorDoc: Doc,
   editorChange: EditorChange
 ): T {
-  return change(doc, draft => {
+  return change(doc, (draft) => {
     const text = getText(draft)
     if (!text) return
     const startPos = codeMirrorDoc.indexFromPos(editorChange.from)
@@ -26,12 +26,12 @@ export default function updateAutomergeDoc<T>(
     const removedLength =
       removedLines.reduce((sum, remove) => sum + remove.length + 1, 0) - 1
     if (removedLength > 0) {
-      text.splice(startPos, removedLength)
+      text.deleteAt!(startPos, removedLength)
     }
 
     const addedText = addedLines.join('\n')
     if (addedText.length > 0) {
-      text.splice(startPos, 0, ...addedText.split(''))
+      text.insertAt!(startPos, ...addedText.split(''))
     }
   })
 }
