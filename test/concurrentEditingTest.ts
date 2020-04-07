@@ -42,20 +42,13 @@ describe('concurrent editing', () => {
     const leftMutex = new Mutex()
     const leftCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
-    function leftGetCodeMirror(
-      textObjectId: Automerge.UUID
-    ): CodeMirror.Editor | undefined {
+    function leftGetCodeMirror(textObjectId: Automerge.UUID): CodeMirror.Editor | undefined {
       return leftCodeMirrorMap.get(textObjectId)
     }
 
     function leftSync(newDoc: TestDoc) {
       const newRight = Automerge.merge(right, newDoc)
-      right = updateCodeMirrorDocs(
-        right,
-        newRight,
-        rightGetCodeMirror,
-        rightMutex
-      )
+      right = updateCodeMirrorDocs(right, newRight, rightGetCodeMirror, rightMutex)
     }
     function rightSync(newDoc: TestDoc) {
       const newLeft = Automerge.merge(left, newDoc)
@@ -68,12 +61,7 @@ describe('concurrent editing', () => {
     }
 
     function rightSetDoc(newDoc: TestDoc) {
-      right = updateCodeMirrorDocs(
-        right,
-        newDoc,
-        rightGetCodeMirror,
-        rightMutex
-      )
+      right = updateCodeMirrorDocs(right, newDoc, rightGetCodeMirror, rightMutex)
       rightSync(newDoc)
     }
 
@@ -92,20 +80,13 @@ describe('concurrent editing', () => {
     const rightMutex = new Mutex()
     const rightCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
-    function rightGetCodeMirror(
-      textObjectId: Automerge.UUID
-    ): CodeMirror.Editor | undefined {
+    function rightGetCodeMirror(textObjectId: Automerge.UUID): CodeMirror.Editor | undefined {
       return rightCodeMirrorMap.get(textObjectId)
     }
     const {
       textObjectId: rightTextObjectId,
       codeMirrorChangeHandler: rightCodeMirrorChangeHandler,
-    } = makeCodeMirrorChangeHandler(
-      () => right,
-      rightSetDoc,
-      getText,
-      rightMutex
-    )
+    } = makeCodeMirrorChangeHandler(() => right, rightSetDoc, getText, rightMutex)
     rightCodeMirrorMap.set(rightTextObjectId, rightCodeMirror)
     rightCodeMirror.on('change', rightCodeMirrorChangeHandler)
 
@@ -115,28 +96,16 @@ describe('concurrent editing', () => {
 
     assertAllContain('-leftCodeMirror')
 
-    rightCodeMirror
-      .getDoc()
-      .replaceRange('-rightCodeMirror', { line: 0, ch: 0 })
+    rightCodeMirror.getDoc().replaceRange('-rightCodeMirror', { line: 0, ch: 0 })
 
     assertAllContain('-rightCodeMirror-leftCodeMirror')
 
-    rightSetDoc(
-      Automerge.change(right, (draft) =>
-        draft.text.insertAt!(0, '-rightAutoMerge')
-      )
-    )
+    rightSetDoc(Automerge.change(right, (draft) => draft.text.insertAt!(0, '-rightAutoMerge')))
     assertAllContain('-rightAutoMerge-rightCodeMirror-leftCodeMirror')
 
-    leftSetDoc(
-      Automerge.change(left, (draft) =>
-        draft.text.insertAt!(0, '-leftAutoMerge')
-      )
-    )
+    leftSetDoc(Automerge.change(left, (draft) => draft.text.insertAt!(0, '-leftAutoMerge')))
 
-    assertAllContain(
-      '-leftAutoMerge-rightAutoMerge-rightCodeMirror-leftCodeMirror'
-    )
+    assertAllContain('-leftAutoMerge-rightAutoMerge-rightCodeMirror-leftCodeMirror')
 
     function assertAllContain(text: string) {
       assert.strictEqual(leftCodeMirror.getValue(), text)
