@@ -13,20 +13,32 @@ interface TestDoc {
 const getText = (doc: TestDoc): Automerge.Text => doc.text
 
 describe('concurrent editing', () => {
-  let leftDiv: HTMLDivElement
-  let rightDiv: HTMLDivElement
+  let leftElement: HTMLElement
+  let rightElement: HTMLElement
   beforeEach(() => {
-    leftDiv = document.createElement('div')
-    document.body.appendChild(leftDiv)
-    rightDiv = document.createElement('div')
-    document.body.appendChild(rightDiv)
+    leftElement = document.body.appendChild(document.createElement('div'))
+    rightElement = document.body.appendChild(document.createElement('div'))
   })
 
   it('syncs', () => {
+    /*
+    TODO: Externalise the Doc<->Doc synchronisation
+    It should be agnostic of mechanism (DocSet, Connection, Roomservice, Automerge.merge etc)
+
+    What does this API look like??? Make a functional API with inspiration from:
+
+    - My own drawings
+    - RoomService
+    - Automerge.merge
+    - DocSet/Connection
+
+
+     */
+
     let left: TestDoc = Automerge.change(Automerge.init(), (doc) => {
       doc.text = new Automerge.Text()
     })
-    const leftCodeMirror = CodeMirror(leftDiv)
+    const leftCodeMirror = CodeMirror(leftElement)
     const leftMutex = new Mutex()
 
     const leftCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
@@ -37,8 +49,9 @@ describe('concurrent editing', () => {
       return leftCodeMirrorMap.get(textObjectId)
     }
 
-    const setLeftDoc = (doc: TestDoc) => {
-      left = doc
+    const leftSetDoc = (newDoc: TestDoc) => {
+      left = updateCodeMirrorDocs(left, newDoc, leftGetCodeMirror, leftMutex)
+
       const newRight = Automerge.merge(right, left)
       right = updateCodeMirrorDocs(
         right,
@@ -50,19 +63,16 @@ describe('concurrent editing', () => {
     const {
       textObjectId: leftTextObjectId,
       codeMirrorChangeHandler: leftCodeMirrorChangeHandler,
-    } = makeCodeMirrorChangeHandler(() => left, setLeftDoc, getText, leftMutex)
+    } = makeCodeMirrorChangeHandler(() => left, leftSetDoc, getText, leftMutex)
 
     leftCodeMirrorMap.set(leftTextObjectId, leftCodeMirror)
 
     leftCodeMirror.on('change', leftCodeMirrorChangeHandler)
 
     let right: TestDoc = Automerge.init()
-
     right = Automerge.merge(right, left)
-
-    const rightCodeMirror = CodeMirror(rightDiv)
+    const rightCodeMirror = CodeMirror(rightElement)
     const rightMutex = new Mutex()
-
     const rightCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
     function rightGetCodeMirror(
@@ -71,8 +81,14 @@ describe('concurrent editing', () => {
       return rightCodeMirrorMap.get(textObjectId)
     }
 
-    const setRightDoc = (doc: TestDoc) => {
-      right = doc
+    const rightSetDoc = (newDoc: TestDoc) => {
+      right = updateCodeMirrorDocs(
+        right,
+        newDoc,
+        rightGetCodeMirror,
+        rightMutex
+      )
+
       const newLeft = Automerge.merge(left, right)
       left = updateCodeMirrorDocs(left, newLeft, leftGetCodeMirror, leftMutex)
     }
@@ -81,34 +97,36 @@ describe('concurrent editing', () => {
       codeMirrorChangeHandler: rightCodeMirrorChangeHandler,
     } = makeCodeMirrorChangeHandler(
       () => right,
-      setRightDoc,
+      rightSetDoc,
       getText,
       rightMutex
     )
-
     rightCodeMirrorMap.set(rightTextObjectId, rightCodeMirror)
-
     rightCodeMirror.on('change', rightCodeMirrorChangeHandler)
 
+    // Type in editors
+
     leftCodeMirror.getDoc().replaceRange('LEFT', { line: 0, ch: 0 })
+
+    assert.strictEqual(leftCodeMirror.getValue(), 'LEFT')
+    assert.strictEqual(rightCodeMirror.getValue(), 'LEFT')
+    assert.strictEqual(left.text.toString(), 'LEFT')
+    assert.strictEqual(right.text.toString(), 'LEFT')
+
     rightCodeMirror.getDoc().replaceRange('RIGHT', { line: 0, ch: 0 })
 
-    assertEqualsOneOf(leftCodeMirror.getValue(), 'LEFTRIGHT', 'RIGHTLEFT')
-    assertEqualsOneOf(rightCodeMirror.getValue(), 'LEFTRIGHT', 'RIGHTLEFT')
+    assert.strictEqual(leftCodeMirror.getValue(), 'RIGHTLEFT')
+    assert.strictEqual(rightCodeMirror.getValue(), 'RIGHTLEFT')
+    assert.strictEqual(left.text.toString(), 'RIGHTLEFT')
+    assert.strictEqual(right.text.toString(), 'RIGHTLEFT')
 
-    assertEqualsOneOf(getText(left).join(''), 'LEFTRIGHT', 'RIGHTLEFT')
-    assertEqualsOneOf(getText(right).join(''), 'LEFTRIGHT', 'RIGHTLEFT')
+    rightSetDoc(
+      Automerge.change(right, (draft) => draft.text.insertAt!(0, 'hello'))
+    )
+
+    assert.strictEqual(leftCodeMirror.getValue(), 'helloRIGHTLEFT')
+    assert.strictEqual(rightCodeMirror.getValue(), 'helloRIGHTLEFT')
+    assert.strictEqual(left.text.toString(), 'helloRIGHTLEFT')
+    assert.strictEqual(right.text.toString(), 'helloRIGHTLEFT')
   })
 })
-
-function assertEqualsOneOf(actual: any, ...expected: any) {
-  assert.strictEqual(expected.length > 0, true)
-  for (let i = 0; i < expected.length; i++) {
-    try {
-      assert.strictEqual(actual, expected[i])
-      return // if we get here without an exception, that means success
-    } catch (e) {
-      if (!e.name.match(/^AssertionError/) || i === expected.length - 1) throw e
-    }
-  }
-}
