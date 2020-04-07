@@ -59,7 +59,7 @@ describe('concurrent editing', () => {
     }
     function rightSync(newDoc: TestDoc) {
       const newLeft = Automerge.merge(left, newDoc)
-      left = updateCodeMirrorDocs(left, newLeft, leftGetCodeMirror, leftMutex)
+      leftSetDoc(newLeft)
     }
 
     const leftSetDoc = (newDoc: TestDoc) => {
@@ -110,27 +110,38 @@ describe('concurrent editing', () => {
 
     // Type in editors
 
-    leftCodeMirror.getDoc().replaceRange('LEFT', { line: 0, ch: 0 })
+    leftCodeMirror.getDoc().replaceRange('-leftCodeMirror', { line: 0, ch: 0 })
 
-    assert.strictEqual(leftCodeMirror.getValue(), 'LEFT')
-    assert.strictEqual(rightCodeMirror.getValue(), 'LEFT')
-    assert.strictEqual(left.text.toString(), 'LEFT')
-    assert.strictEqual(right.text.toString(), 'LEFT')
+    assertAllContain('-leftCodeMirror')
 
-    rightCodeMirror.getDoc().replaceRange('RIGHT', { line: 0, ch: 0 })
+    rightCodeMirror
+      .getDoc()
+      .replaceRange('-rightCodeMirror', { line: 0, ch: 0 })
 
-    assert.strictEqual(leftCodeMirror.getValue(), 'RIGHTLEFT')
-    assert.strictEqual(rightCodeMirror.getValue(), 'RIGHTLEFT')
-    assert.strictEqual(left.text.toString(), 'RIGHTLEFT')
-    assert.strictEqual(right.text.toString(), 'RIGHTLEFT')
+    assertAllContain('-rightCodeMirror-leftCodeMirror')
 
     rightSetDoc(
-      Automerge.change(right, (draft) => draft.text.insertAt!(0, 'hello'))
+      Automerge.change(right, (draft) =>
+        draft.text.insertAt!(0, '-rightAutoMerge')
+      )
+    )
+    assertAllContain('-rightAutoMerge-rightCodeMirror-leftCodeMirror')
+
+    leftSetDoc(
+      Automerge.change(left, (draft) =>
+        draft.text.insertAt!(0, '-leftAutoMerge')
+      )
     )
 
-    assert.strictEqual(leftCodeMirror.getValue(), 'helloRIGHTLEFT')
-    assert.strictEqual(rightCodeMirror.getValue(), 'helloRIGHTLEFT')
-    assert.strictEqual(left.text.toString(), 'helloRIGHTLEFT')
-    assert.strictEqual(right.text.toString(), 'helloRIGHTLEFT')
+    assertAllContain(
+      '-leftAutoMerge-rightAutoMerge-rightCodeMirror-leftCodeMirror'
+    )
+
+    function assertAllContain(text: string) {
+      assert.strictEqual(leftCodeMirror.getValue(), text)
+      assert.strictEqual(rightCodeMirror.getValue(), text)
+      assert.strictEqual(left.text.toString(), text)
+      assert.strictEqual(right.text.toString(), text)
+    }
   })
 })
