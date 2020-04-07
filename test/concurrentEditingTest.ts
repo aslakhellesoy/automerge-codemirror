@@ -52,7 +52,7 @@ describe('concurrent editing', () => {
     const leftSetDoc = (newDoc: TestDoc) => {
       left = updateCodeMirrorDocs(left, newDoc, leftGetCodeMirror, leftMutex)
 
-      const newRight = Automerge.merge(right, left)
+      const newRight = Automerge.merge(right, newDoc)
       right = updateCodeMirrorDocs(
         right,
         newRight,
@@ -89,7 +89,7 @@ describe('concurrent editing', () => {
         rightMutex
       )
 
-      const newLeft = Automerge.merge(left, right)
+      const newLeft = Automerge.merge(left, newDoc)
       left = updateCodeMirrorDocs(left, newLeft, leftGetCodeMirror, leftMutex)
     }
     const {
