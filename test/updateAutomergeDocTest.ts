@@ -1,7 +1,7 @@
 import assert from 'assert'
 import './codeMirrorEnv'
 import Automerge from 'automerge'
-import updateAutomerge from '../src/updateAutomergeDoc'
+import updateAutomergeDoc from '../src/updateAutomergeDoc'
 import CodeMirror from 'codemirror'
 import { randomPositiveInt, randomString } from './random'
 
@@ -21,13 +21,13 @@ describe('updateAutomergeDoc', () => {
   it('adds new text', () => {
     const oldDoc: TestDoc = Automerge.change(
       Automerge.init(),
-      draft => (draft.text = new Automerge.Text())
+      (draft) => (draft.text = new Automerge.Text())
     )
     let newDoc: TestDoc
 
     const codeMirror = CodeMirror(div)
     codeMirror.on('change', (editor, change) => {
-      newDoc = updateAutomerge(oldDoc, getText, editor.getDoc(), change)
+      newDoc = updateAutomergeDoc(oldDoc, getText, editor.getDoc(), change)
     })
 
     codeMirror.getDoc().replaceRange('HELLO', { line: 0, ch: 0 })
@@ -37,13 +37,13 @@ describe('updateAutomergeDoc', () => {
 
   for (let n = 0; n < 10; n++) {
     it(`works with random edits (fuzz test ${n})`, () => {
-      let doc: TestDoc = Automerge.change(Automerge.init(), draft => {
+      let doc: TestDoc = Automerge.change(Automerge.init(), (draft) => {
         draft.text = new Automerge.Text()
       })
 
       const codeMirror = CodeMirror(div)
       codeMirror.on('change', (editor, change) => {
-        doc = updateAutomerge(doc, getText, editor.getDoc(), change)
+        doc = updateAutomergeDoc(doc, getText, editor.getDoc(), change)
       })
 
       for (let t = 0; t < 10; t++) {

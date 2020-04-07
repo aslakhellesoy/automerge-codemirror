@@ -3,77 +3,44 @@ import React from 'react'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 
-import { change, Connection, DocSet, init, WatchableDoc } from 'automerge'
-import { DocSetWatchableDoc, Link, Mutex } from '../src'
+import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
-import { GridComponent, Sheet } from './components/GridComponent'
+import { GetDoc, SetDoc, UseDoc } from '../src/react/UseDoc'
 
 storiesOf('Collaboration', module).add(
   'Multiple CodeMirrors linked to a single Automerge doc',
   () => {
-    const watchableDocs = createConnectedDocs<Pad>(3, 'someid')
+    const useDocs = connectDocs([
+      Automerge.init<Pad>(),
+      Automerge.init<Pad>(),
+      Automerge.init<Pad>(),
+    ])
 
-    watchableDocs[0].set(change(init(), (draft: Pad) => (draft.sheets = [])))
+    const useDoc0 = useDocs[0]
+    const [getDoc0, setDoc0] = useDoc0()
+    setDoc0(Automerge.change(getDoc0(), (draft: Pad) => (draft.sheets = [])))
 
     return (
       <div>
-        {watchableDocs.map((watchableDoc, n) => (
-          <PadComponent
-            key={n}
-            watchableDoc={watchableDoc}
-            mutex={new Mutex()}
-            links={new Set<Link<Pad>>()}
-          />
+        {useDocs.map((useDoc, n) => (
+          <PadComponent key={n} useDoc={useDoc} />
         ))}
       </div>
     )
   }
 )
 
-storiesOf('Collaboration', module).add(
-  'Grid linked to a single Automerge doc',
-  () => {
-    const watchableDocs = createConnectedDocs<Sheet>(2, 'someid')
-    watchableDocs[0].set(
-      change(
-        init(),
-        (draft: Sheet) =>
-          (draft.grid = [
-            [{ value: 'A' }, { value: 'BBB' }],
-            [{ value: 'CCC' }, { value: 'DDD' }],
-          ])
-      )
-    )
-
-    return (
-      <div>
-        {watchableDocs.map((watchableDoc, n) => (
-          <GridComponent key={n} watchableDoc={watchableDoc} />
-        ))}
-      </div>
-    )
-  }
-)
-
-function createConnectedDocs<T>(count: number, id: string): WatchableDoc<T>[] {
-  const docSets: DocSet<T>[] = []
-  for (let i = 0; i < count; i++) {
-    const docSet = new DocSet<T>()
-    docSets.push(docSet)
-
-    if (i > 0) {
-      let connectionA: Connection<T>
-      let connectionB: Connection<T>
-
-      connectionA = new Connection(docSet, msg => connectionB.receiveMsg(msg))
-      connectionB = new Connection(docSets[i - 1], msg =>
-        connectionA.receiveMsg(msg)
-      )
-
-      connectionA.open()
-      connectionB.open()
+function connectDocs<T>(
+  initialDocs: ReadonlyArray<Automerge.FreezeObject<T>>
+): ReadonlyArray<UseDoc<T>> {
+  return initialDocs.map((initialDoc, i) => {
+    let doc = initialDoc
+    const getDoc: GetDoc<T> = () => doc
+    const setDoc: SetDoc<T> = (newDoc: Automerge.FreezeObject<T>) => {
+      doc = newDoc
     }
-  }
-  return docSets.map(docSet => new DocSetWatchableDoc(docSet, id))
+    const useDoc: UseDoc<T> = () => [getDoc, setDoc]
+    return useDoc
+  })
 }

@@ -1,16 +1,16 @@
 import assert from 'assert'
 import './codeMirrorEnv'
-import { change, init, merge, Text } from 'automerge'
+import Automerge from 'automerge'
 import CodeMirror from 'codemirror'
 import updateCodeMirrorDocs from '../src/updateCodeMirrorDocs'
 import makeCodeMirrorChangeHandler from '../src/makeCodeMirrorChangeHandler'
 import Mutex from '../src/Mutex'
 
 interface TestDoc {
-  text: Text
+  text: Automerge.Text
 }
 
-const getText = (doc: TestDoc): Text => doc.text
+const getText = (doc: TestDoc): Automerge.Text => doc.text
 
 describe('concurrent editing', () => {
   let leftDiv: HTMLDivElement
@@ -23,55 +23,75 @@ describe('concurrent editing', () => {
   })
 
   it('syncs', () => {
-    let left: TestDoc = change(init(), (doc) => {
-      doc.text = new Text()
+    let left: TestDoc = Automerge.change(Automerge.init(), (doc) => {
+      doc.text = new Automerge.Text()
     })
     const leftCodeMirror = CodeMirror(leftDiv)
-    const leftLinks = new Set([
-      {
-        codeMirror: leftCodeMirror,
-        getText,
-      },
-    ])
     const leftMutex = new Mutex()
 
-    leftCodeMirror.on(
-      'change',
-      makeCodeMirrorChangeHandler(
-        () => left,
-        (doc) => {
-          left = doc
-          const newRight = merge(right, left)
-          right = updateCodeMirrorDocs(right, newRight, rightLinks, rightMutex)
-        },
-        getText,
-        leftMutex
-      )
+    const leftCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
+
+    function leftGetCodeMirror(
+      textObjectId: Automerge.UUID
+    ): CodeMirror.Editor | undefined {
+      return leftCodeMirrorMap.get(textObjectId)
+    }
+
+    const {
+      textObjectId: leftTextObjectId,
+      codeMirrorChangeHandler: leftCodeMirrorChangeHandler,
+    } = makeCodeMirrorChangeHandler(
+      () => left,
+      (doc) => {
+        left = doc
+        const newRight = Automerge.merge(right, left)
+        right = updateCodeMirrorDocs(
+          right,
+          newRight,
+          rightGetCodeMirror,
+          rightMutex
+        )
+      },
+      getText,
+      leftMutex
     )
 
-    let right: TestDoc = init()
+    leftCodeMirrorMap.set(leftTextObjectId, leftCodeMirror)
+
+    leftCodeMirror.on('change', leftCodeMirrorChangeHandler)
+
+    let right: TestDoc = Automerge.init()
+
+    right = Automerge.merge(right, left)
+
     const rightCodeMirror = CodeMirror(rightDiv)
-    const rightLinks = new Set([
-      {
-        codeMirror: rightCodeMirror,
-        getText,
-      },
-    ])
     const rightMutex = new Mutex()
 
-    rightCodeMirror.on(
-      'change',
-      makeCodeMirrorChangeHandler(
-        () => right,
-        (doc) => {
-          right = doc
-          const newLeft = merge(left, right)
-          left = updateCodeMirrorDocs(left, newLeft, leftLinks, leftMutex)
-        },
-        getText,
-        rightMutex
-      )
+    const rightCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
+
+    function rightGetCodeMirror(
+      textObjectId: Automerge.UUID
+    ): CodeMirror.Editor | undefined {
+      return rightCodeMirrorMap.get(textObjectId)
+    }
+
+    const {
+      textObjectId: rightTextObjectId,
+      codeMirrorChangeHandler: rightCodeMirrorChangeHandler,
+    } = makeCodeMirrorChangeHandler(
+      () => right,
+      (doc) => {
+        right = doc
+        const newLeft = Automerge.merge(left, right)
+        left = updateCodeMirrorDocs(left, newLeft, leftGetCodeMirror, leftMutex)
+      },
+      getText,
+      rightMutex
     )
+
+    rightCodeMirrorMap.set(rightTextObjectId, rightCodeMirror)
+
+    rightCodeMirror.on('change', rightCodeMirrorChangeHandler)
 
     leftCodeMirror.getDoc().replaceRange('LEFT', { line: 0, ch: 0 })
     rightCodeMirror.getDoc().replaceRange('RIGHT', { line: 0, ch: 0 })

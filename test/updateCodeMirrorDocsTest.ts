@@ -14,8 +14,6 @@ interface TestDocWithManyTexts {
   texts: Automerge.Text[]
 }
 
-const getText = (doc: TestDoc): Automerge.Text => doc.text
-
 describe('updateCodeMirrorDocs', () => {
   let div: HTMLDivElement
   beforeEach(() => {
@@ -34,21 +32,13 @@ describe('updateCodeMirrorDocs', () => {
     })
 
     const codeMirror = CodeMirror(div)
-
-    const links = new Set([
-      {
-        codeMirror: codeMirror,
-        getText,
-      },
-    ])
-
     const mutex = new Mutex()
 
-    updateCodeMirrorDocs(doc1, doc2, links, mutex)
-    assert.deepStrictEqual(codeMirror.getValue(), doc2.text.join(''))
+    updateCodeMirrorDocs(doc1, doc2, () => codeMirror, mutex)
+    assert.deepStrictEqual(codeMirror.getValue(), doc2.text.toString())
 
-    updateCodeMirrorDocs(doc2, doc3, links, mutex)
-    assert.deepStrictEqual(codeMirror.getValue(), doc3.text.join(''))
+    updateCodeMirrorDocs(doc2, doc3, () => codeMirror, mutex)
+    assert.deepStrictEqual(codeMirror.getValue(), doc3.text.toString())
   })
 
   it('handles a removed text node without crashing', () => {
@@ -58,27 +48,17 @@ describe('updateCodeMirrorDocs', () => {
       draft.texts.push(new Automerge.Text())
     })
 
-    const getText = (doc: TestDocWithManyTexts): Automerge.Text => doc.texts[0]
-
     const codeMirror = CodeMirror(div)
-
-    const links = new Set([
-      {
-        codeMirror: codeMirror,
-        getText,
-      },
-    ])
-
     const mutex = new Mutex()
 
-    updateCodeMirrorDocs(doc1, doc2, links, mutex)
+    updateCodeMirrorDocs(doc1, doc2, () => codeMirror, mutex)
     assert.deepStrictEqual(codeMirror.getValue(), doc2.texts[0].join(''))
 
     const doc3: TestDocWithManyTexts = Automerge.change(doc2, (draft) => {
       draft.texts.shift()
     })
 
-    updateCodeMirrorDocs(doc2, doc3, links, mutex)
+    updateCodeMirrorDocs(doc2, doc3, () => codeMirror, mutex)
   })
 
   for (let n = 0; n < 10; n++) {
@@ -89,24 +69,15 @@ describe('updateCodeMirrorDocs', () => {
       )
 
       const codeMirror = CodeMirror(div)
-
-      const links = new Set([
-        {
-          codeMirror: codeMirror,
-          getText,
-          processingEditorChange: false,
-        },
-      ])
-
       const mutex = new Mutex()
 
       for (let t = 0; t < 10; t++) {
         const newDoc = monkeyModify(doc)
-        updateCodeMirrorDocs(doc, newDoc, links, mutex)
+        updateCodeMirrorDocs(doc, newDoc, () => codeMirror, mutex)
         doc = newDoc
       }
 
-      assert.deepStrictEqual(doc.text.join(''), codeMirror.getValue())
+      assert.deepStrictEqual(doc.text.toString(), codeMirror.getValue())
     })
   }
 })
