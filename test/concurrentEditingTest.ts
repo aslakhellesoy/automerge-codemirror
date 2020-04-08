@@ -44,21 +44,17 @@ describe('concurrent editing', () => {
       left = updateCodeMirrorDocs(left, newLeft, leftGetCodeMirror, leftMutex)
     }
 
+    let left: TestDoc = Automerge.change(Automerge.init(), (doc) => {
+      doc.text = new Automerge.Text()
+    })
+
+    const leftCodeMirror = CodeMirror(leftElement)
+
+    const leftMutex = new Mutex()
     function leftSetDoc(newDoc: TestDoc) {
       left = updateCodeMirrorDocs(left, newDoc, leftGetCodeMirror, leftMutex)
       leftSync(newDoc)
     }
-
-    function rightSetDoc(newDoc: TestDoc) {
-      right = updateCodeMirrorDocs(right, newDoc, rightGetCodeMirror, rightMutex)
-      rightSync(newDoc)
-    }
-
-    let left: TestDoc = Automerge.change(Automerge.init(), (doc) => {
-      doc.text = new Automerge.Text()
-    })
-    const leftCodeMirror = CodeMirror(leftElement)
-    const leftMutex = new Mutex()
     const leftCodeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
     function leftGetCodeMirror(textObjectId: Automerge.UUID): CodeMirror.Editor | undefined {
@@ -75,6 +71,11 @@ describe('concurrent editing', () => {
     leftCodeMirror.on('change', leftCodeMirrorChangeHandler)
 
     let right: TestDoc = Automerge.init()
+
+    function rightSetDoc(newDoc: TestDoc) {
+      right = updateCodeMirrorDocs(right, newDoc, rightGetCodeMirror, rightMutex)
+      rightSync(newDoc)
+    }
     right = Automerge.merge(right, left)
     const rightCodeMirror = CodeMirror(rightElement)
     const rightMutex = new Mutex()

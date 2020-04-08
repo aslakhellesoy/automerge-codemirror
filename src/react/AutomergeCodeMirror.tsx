@@ -1,35 +1,27 @@
-import React, { Dispatch, SetStateAction, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import CodeMirror from 'codemirror'
-import { Proxy, Text } from 'automerge'
-import makeCodeMirrorChangeHandler from '../makeCodeMirrorChangeHandler'
-import Mutex from '../Mutex'
+import { GetDoc, GetText, SetDoc } from '../types'
 
 interface IProps<T> {
   makeCodeMirror: (host: HTMLElement) => CodeMirror.Editor
-  getDoc: () => T
-  setDoc: Dispatch<SetStateAction<T>>
-  getText: (draft: Proxy<T>) => Text
-  mutex: Mutex
+  connectCodeMirror: (
+    codeMirror: CodeMirror.Editor,
+    getDoc: GetDoc<T>,
+    setDoc: SetDoc<T>,
+    getText: GetText<T>
+  ) => () => void
+  getDoc: GetDoc<T>
+  setDoc: SetDoc<T>
+  getText: GetText<T>
 }
 
 const AutomergeCodeMirror = <T extends object>(props: IProps<T>) => {
-  const { makeCodeMirror, getDoc, setDoc, getText, mutex } = props
+  const { makeCodeMirror, connectCodeMirror, getDoc, setDoc, getText } = props
   let codeMirrorDiv: HTMLDivElement | null
 
   useEffect(() => {
     const codeMirror = makeCodeMirror(codeMirrorDiv!)
-
-    const { codeMirrorChangeHandler } = makeCodeMirrorChangeHandler(
-      getDoc,
-      setDoc,
-      getText,
-      mutex
-    )
-    codeMirror.on('change', codeMirrorChangeHandler)
-
-    return () => {
-      codeMirror.off('change', codeMirrorChangeHandler)
-    }
+    return connectCodeMirror(codeMirror, getDoc, setDoc, getText)
   }, [])
 
   return <div ref={(div) => (codeMirrorDiv = div)} />

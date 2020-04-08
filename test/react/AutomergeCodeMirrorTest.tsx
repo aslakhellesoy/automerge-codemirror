@@ -3,62 +3,49 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import CodeMirror from 'codemirror'
 import Automerge from 'automerge'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
-import { Mutex, updateCodeMirrorDocs } from '../../src'
 import React from 'react'
 import assert from 'assert'
+import automergeCodeMirror from '../../src/automergeCodeMirror'
 
 interface TestDoc {
   text: Automerge.Text
 }
 
 describe('<AutomergeCodeMirror>', () => {
-  let div: HTMLElement
+  let doc: Automerge.FreezeObject<TestDoc>
+  const getDoc = () => doc
+  const setDoc = (newDoc: Automerge.FreezeObject<TestDoc>) => (doc = newDoc)
+  const getText = (doc: Automerge.FreezeObject<TestDoc>) => doc.text
+  let host: HTMLElement
+
   beforeEach(() => {
-    div = document.createElement('div')
-    document.body.appendChild(div)
+    doc = Automerge.from({ text: new Automerge.Text() })
+    host = document.body.appendChild(document.createElement('div'))
   })
 
   afterEach(() => {
-    unmountComponentAtNode(div)
-    div.remove()
+    unmountComponentAtNode(host)
+    host.remove()
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    let codeMirror: CodeMirror.Editor
+    const { connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
 
+    let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
       codeMirror = CodeMirror(host)
       return codeMirror
     }
 
-    let doc = Automerge.change(
-      Automerge.init<TestDoc>(),
-      (draft) => (draft.text = new Automerge.Text())
-    )
-
-    function getDoc() {
-      return doc
-    }
-
-    function setDoc(newDoc: TestDoc) {
-      doc = newDoc
-    }
-
-    function getText(draft: Automerge.Proxy<TestDoc>) {
-      return draft.text
-    }
-
-    const mutex = new Mutex()
-
     render(
       <AutomergeCodeMirror
         makeCodeMirror={makeCodeMirror}
+        connectCodeMirror={connectCodeMirror}
         getDoc={getDoc}
         setDoc={setDoc}
         getText={getText}
-        mutex={mutex}
       />,
-      div
+      host
     )
 
     await new Promise((resolve) => setTimeout(resolve, 10))
@@ -68,50 +55,29 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
+    const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
+
     let codeMirror: CodeMirror.Editor
-
-    const mutex = new Mutex()
-
     function makeCodeMirror(host: HTMLElement) {
       codeMirror = CodeMirror(host)
       return codeMirror
     }
 
-    let doc = Automerge.change(
-      Automerge.init<TestDoc>(),
-      (draft) => (draft.text = new Automerge.Text())
-    )
-
-    function getDoc() {
-      return doc
-    }
-
-    function getCodeMirror(textObjectId: Automerge.UUID) {
-      return codeMirror
-    }
-
-    function setDoc(newDoc: TestDoc) {
-      doc = updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
-    }
-
-    function getText(draft: Automerge.Proxy<TestDoc>) {
-      return draft.text
-    }
-
     render(
       <AutomergeCodeMirror
         makeCodeMirror={makeCodeMirror}
+        connectCodeMirror={connectCodeMirror}
         getDoc={getDoc}
         setDoc={setDoc}
         getText={getText}
-        mutex={mutex}
       />,
-      div
+      host
     )
 
     await new Promise((resolve) => setTimeout(resolve, 10))
 
     setDoc(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello')))
+    updateCodeMirrors(doc)
     assert.strictEqual(codeMirror!.getValue(), 'hello')
   })
 })
