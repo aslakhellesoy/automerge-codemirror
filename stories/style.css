@@ -2,3 +2,8 @@
   height: auto;
   background: inherit;
 }
+
+.pad {
+  margin: 10px;
+  border: black solid 1px;
+}

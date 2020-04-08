@@ -21,6 +21,7 @@ const AutomergeCodeMirror = <T extends object>(props: IProps<T>) => {
 
   useEffect(() => {
     const codeMirror = makeCodeMirror(codeMirrorDiv!)
+    codeMirror.setValue(getText(getDoc()).toString())
     return connectCodeMirror(codeMirror, getDoc, setDoc, getText)
   }, [])
 

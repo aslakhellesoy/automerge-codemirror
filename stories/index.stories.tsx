@@ -11,6 +11,7 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
   return (
     <div>
       <PadComponent initialPad={Automerge.init<Pad>()} />
+      <PadComponent initialPad={Automerge.init<Pad>()} />
     </div>
   )
 })

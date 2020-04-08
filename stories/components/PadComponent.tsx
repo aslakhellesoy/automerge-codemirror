@@ -46,8 +46,18 @@ const PadComponent: FunctionComponent<Props> = ({ initialPad }) => {
     })
   }
 
+  let doc = pad
+  function setDoc(newDoc: Pad) {
+    doc = newDoc
+    setPad(newDoc)
+  }
+
+  function getDoc() {
+    return doc
+  }
+
   return (
-    <div>
+    <div className="pad">
       <button onClick={createSheet}>New Sheet</button>
       <button onClick={removeSheet}>Remove Sheet</button>
       {(pad.sheets || []).map((_, i) => (
@@ -55,8 +65,8 @@ const PadComponent: FunctionComponent<Props> = ({ initialPad }) => {
           <AutomergeCodeMirror<Pad>
             makeCodeMirror={makeCodeMirror}
             connectCodeMirror={connectCodeMirror}
-            setDoc={setPad}
-            getDoc={() => pad}
+            setDoc={setDoc}
+            getDoc={getDoc}
             getText={(pad) => pad.sheets[i]}
           />
         </div>
