@@ -1,5 +1,5 @@
-import { Text } from 'automerge'
-import { Doc, EditorChange } from 'codemirror'
+import CodeMirror from 'codemirror'
+import { GetText } from './types'
 /**
  * Applies CodeMirror changes and returns a new Automerge Doc
  *
@@ -10,7 +10,7 @@ import { Doc, EditorChange } from 'codemirror'
  */
 export default function updateAutomergeDoc<T>(
   doc: T,
-  getText: (doc: T) => Text,
-  codeMirrorDoc: Doc,
-  editorChange: EditorChange
+  getText: GetText<T>,
+  codeMirrorDoc: CodeMirror.Doc,
+  editorChange: CodeMirror.EditorChange
 ): T

@@ -1,8 +1,7 @@
 'use strict'
 Object.defineProperty(exports, '__esModule', { value: true })
 function randomString(len) {
-  var chars =
-    '0123456789\nABCDEF\nGHIJKLM\nNOPQRSTUVWXTZ\nabcde\nfghiklmnop\nqrstuvwxyz'
+  var chars = '0123456789\nABCDEF\nGHIJKLM\nNOPQRSTUVWXTZ\nabcde\nfghiklmnop\nqrstuvwxyz'
   var result = ''
   for (var i = 0; i < len; i++) {
     var rnum = randomPositiveInt(chars.length)

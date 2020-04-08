@@ -1,25 +1,25 @@
 import { change, Text } from 'automerge'
-import React, { FunctionComponent } from 'react'
-import { Link, Mutex } from '../../src'
+import React, { FunctionComponent, useState } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
-import { UseDoc } from '../../src/react/UseDoc'
+import CodeMirror from 'codemirror'
+import automergeCodeMirror from '../../src/automergeCodeMirror'
 
 interface Pad {
   sheets: Text[]
 }
 
 interface Props {
-  useDoc: UseDoc<Pad>
-  mutex: Mutex
-  links: Set<Link<Pad>>
+  initialPad: Pad
 }
 
-const PadComponent: FunctionComponent<Props> = ({ useDoc, mutex, links }) => {
-  const [getDoc, setDoc] = useDoc()
+const PadComponent: FunctionComponent<Props> = ({ initialPad }) => {
+  const [pad, setPad] = useState(initialPad)
+
+  const { connectCodeMirror } = automergeCodeMirror(initialPad)
 
   function createSheet() {
-    setDoc(
-      change(getDoc(), (draft) => {
+    setPad(
+      change(pad, (draft) => {
         if (draft.sheets == undefined) draft.sheets = []
         draft.sheets.push(new Text())
       })
@@ -27,8 +27,8 @@ const PadComponent: FunctionComponent<Props> = ({ useDoc, mutex, links }) => {
   }
 
   function removeSheet() {
-    setDoc(
-      change(getDoc(), (draft) => {
+    setPad(
+      change(pad, (draft) => {
         if (draft.sheets) {
           draft.sheets.shift()
         }
@@ -36,24 +36,28 @@ const PadComponent: FunctionComponent<Props> = ({ useDoc, mutex, links }) => {
     )
   }
 
+  function makeCodeMirror(element: HTMLElement): CodeMirror.Editor {
+    return CodeMirror(element, {
+      viewportMargin: Infinity,
+      lineWrapping: true,
+      extraKeys: {
+        Tab: false,
+      },
+    })
+  }
+
   return (
     <div>
       <button onClick={createSheet}>New Sheet</button>
       <button onClick={removeSheet}>Remove Sheet</button>
-      {(getDoc().sheets || []).map((_, i) => (
+      {(pad.sheets || []).map((_, i) => (
         <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
           <AutomergeCodeMirror<Pad>
-            getDoc={getDoc}
-            setDoc={setDoc}
+            makeCodeMirror={makeCodeMirror}
+            connectCodeMirror={connectCodeMirror}
+            setDoc={setPad}
+            getDoc={() => pad}
             getText={(pad) => pad.sheets[i]}
-            mutex={mutex}
-            editorConfiguration={{
-              viewportMargin: Infinity,
-              lineWrapping: true,
-              extraKeys: {
-                Tab: false,
-              },
-            }}
           />
         </div>
       ))}

@@ -1,5 +1,4 @@
-import updateAutomergeDoc from './updateAutomergeDoc'
-import updateCodeMirrorDocs from './updateCodeMirrorDocs'
-import Mutex from './Mutex'
+import AutomergeCodeMirror from './react/AutomergeCodeMirror'
+import automergeCodeMirror from './automergeCodeMirror'
 
-export { updateAutomergeDoc, updateCodeMirrorDocs, Mutex }
+export { AutomergeCodeMirror, automergeCodeMirror }

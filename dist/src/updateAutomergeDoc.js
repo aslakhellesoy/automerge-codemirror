@@ -1,7 +1,7 @@
 'use strict'
 var __read =
   (this && this.__read) ||
-  function(o, n) {
+  function (o, n) {
     var m = typeof Symbol === 'function' && o[Symbol.iterator]
     if (!m) return o
     var i = m.call(o),
@@ -23,13 +23,17 @@ var __read =
   }
 var __spread =
   (this && this.__spread) ||
-  function() {
-    for (var ar = [], i = 0; i < arguments.length; i++)
-      ar = ar.concat(__read(arguments[i]))
+  function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]))
     return ar
   }
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod }
+  }
 Object.defineProperty(exports, '__esModule', { value: true })
-var automerge_1 = require('automerge')
+var automerge_1 = __importDefault(require('automerge'))
 /**
  * Applies CodeMirror changes and returns a new Automerge Doc
  *
@@ -39,22 +43,22 @@ var automerge_1 = require('automerge')
  * @param editorChange the change
  */
 function updateAutomergeDoc(doc, getText, codeMirrorDoc, editorChange) {
-  return automerge_1.change(doc, function(draft) {
+  return automerge_1.default.change(doc, function (draft) {
     var text = getText(draft)
     if (!text) return
     var startPos = codeMirrorDoc.indexFromPos(editorChange.from)
     var removedLines = editorChange.removed || []
     var addedLines = editorChange.text
     var removedLength =
-      removedLines.reduce(function(sum, remove) {
+      removedLines.reduce(function (sum, remove) {
         return sum + remove.length + 1
       }, 0) - 1
     if (removedLength > 0) {
-      text.splice(startPos, removedLength)
+      text.deleteAt(startPos, removedLength)
     }
     var addedText = addedLines.join('\n')
     if (addedText.length > 0) {
-      text.splice.apply(text, __spread([startPos, 0], addedText.split('')))
+      text.insertAt.apply(text, __spread([startPos], addedText.split('')))
     }
   })
 }

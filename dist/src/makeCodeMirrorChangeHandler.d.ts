@@ -1,8 +1,17 @@
-import { WatchableDoc, Text } from 'automerge'
-import { Editor, EditorChange } from 'codemirror'
+import CodeMirror from 'codemirror'
 import Mutex from './Mutex'
+import { GetDoc, GetText, SetDoc } from './types'
+declare type CodeMirrorChangeHandler = (
+  instance: CodeMirror.Editor,
+  changeObj: CodeMirror.EditorChangeLinkedList
+) => void
 export default function makeCodeMirrorChangeHandler<T>(
-  watchableDoc: WatchableDoc<T>,
-  getText: (doc: T) => Text,
+  getDoc: GetDoc<T>,
+  setDoc: SetDoc<T>,
+  getText: GetText<T>,
   mutex: Mutex
-): (editor: Editor, change: EditorChange) => void
+): {
+  textObjectId: string
+  codeMirrorChangeHandler: CodeMirrorChangeHandler
+}
+export {}

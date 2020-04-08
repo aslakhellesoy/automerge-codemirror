@@ -4,7 +4,7 @@
  */
 export default class Mutex {
   private _locked
-  readonly locked: boolean
+  get locked(): boolean
   lock(): void
   release(): void
 }
