@@ -3,9 +3,11 @@ import Automerge from 'automerge'
 import updateCodeMirrorDocs from './updateCodeMirrorDocs'
 import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
 import Mutex from './Mutex'
-import { GetDoc, GetText, SetDoc } from './types'
+import { ConnectCodeMirror, GetDoc, GetText, SetDoc, UpdateCodeMirrors } from './types'
 
-export default function automergeCodeMirror<T>(doc: Automerge.FreezeObject<T>) {
+export default function automergeCodeMirror<T>(
+  doc: T
+): { connectCodeMirror: ConnectCodeMirror<T>; updateCodeMirrors: UpdateCodeMirrors<T> } {
   const mutex = new Mutex()
   const codeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
@@ -27,7 +29,7 @@ export default function automergeCodeMirror<T>(doc: Automerge.FreezeObject<T>) {
     return disconnectCodeMirror
   }
 
-  function updateCodeMirrors(newDoc: Automerge.FreezeObject<T>) {
+  function updateCodeMirrors(newDoc: T) {
     doc = updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
   }
 

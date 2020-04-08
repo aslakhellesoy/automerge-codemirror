@@ -11,11 +11,11 @@ import Mutex from './Mutex'
  * @param mutex
  */
 export default function updateCodeMirrorDocs<T>(
-  oldDoc: Automerge.FreezeObject<T>,
-  newDoc: Automerge.FreezeObject<T>,
+  oldDoc: T,
+  newDoc: T,
   getCodeMirror: (textObjectId: Automerge.UUID) => CodeMirror.Editor | undefined,
   mutex: Mutex
-): Automerge.FreezeObject<T> {
+): T {
   if (mutex.locked || !oldDoc) {
     return newDoc
   }
