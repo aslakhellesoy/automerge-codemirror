@@ -8,7 +8,6 @@
     "allowJs": false,
     "jsx": "react",
     "moduleResolution": "node",
-    "rootDirs": ["src", "stories"],
     "baseUrl": "src",
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
@@ -25,6 +24,6 @@
     "esModuleInterop": true,
     "types": ["node", "automerge", "codemirror", "mocha"]
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": ["src", "test", "stories"],
   "exclude": ["node_modules"]
 }

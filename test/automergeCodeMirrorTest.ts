@@ -10,9 +10,8 @@ interface TestDoc {
 
 describe('automergeCodeMirror', () => {
   let doc: Automerge.FreezeObject<TestDoc>
-  const getDoc = () => doc
-  const setDoc = (newDoc: Automerge.FreezeObject<TestDoc>) => (doc = newDoc)
-  const getText = (doc: Automerge.FreezeObject<TestDoc>) => doc.text
+  const setDoc = (newDoc: TestDoc) => (doc = newDoc)
+  const getText = (doc: TestDoc) => doc.text
   let host: HTMLElement
   let codeMirror: CodeMirror.Editor
 
@@ -28,16 +27,14 @@ describe('automergeCodeMirror', () => {
 
   describe('Automerge => CodeMirror', () => {
     it('handles 2 consecutive Automerge changes', () => {
-      const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
-      const disconnectCodeMirror = connectCodeMirror(codeMirror, getDoc, setDoc, getText)
+      const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(() => doc)
+      const disconnectCodeMirror = connectCodeMirror(codeMirror, setDoc, getText)
 
-      doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
-      updateCodeMirrors(doc)
+      doc = updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello')))
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
 
-      doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'world'))
-      updateCodeMirrors(doc)
+      doc = updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'world')))
 
       assert.strictEqual(codeMirror.getValue(), 'worldhello')
 
@@ -45,17 +42,15 @@ describe('automergeCodeMirror', () => {
     })
 
     it('ignores Automerge changes after disconnection', () => {
-      const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
-      const disconnectCodeMirror = connectCodeMirror(codeMirror, getDoc, setDoc, getText)
+      const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(() => doc)
+      const disconnectCodeMirror = connectCodeMirror(codeMirror, setDoc, getText)
 
-      doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
-      updateCodeMirrors(doc)
+      doc = updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello')))
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
       disconnectCodeMirror()
 
-      doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'world'))
-      updateCodeMirrors(doc)
+      doc = updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'world')))
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
     })
@@ -63,8 +58,8 @@ describe('automergeCodeMirror', () => {
 
   describe('CodeMirror => Automerge', () => {
     it('handles 2 consecutive CodeMirror changes', () => {
-      const { connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
-      const disconnectCodeMirror = connectCodeMirror(codeMirror, getDoc, setDoc, getText)
+      const { connectCodeMirror } = automergeCodeMirror<TestDoc>(() => doc)
+      connectCodeMirror(codeMirror, setDoc, getText)
 
       // doc = Automerge.change(doc, draft => draft.text.insertAt!(0, 'hello'))
       codeMirror.replaceRange('hello', codeMirror.posFromIndex(0))
@@ -74,8 +69,6 @@ describe('automergeCodeMirror', () => {
       codeMirror.replaceRange('world', codeMirror.posFromIndex(0))
       assert.strictEqual(codeMirror.getValue(), 'worldhello')
       assert.strictEqual(doc.text.toString(), 'worldhello')
-
-      disconnectCodeMirror()
     })
   })
 })

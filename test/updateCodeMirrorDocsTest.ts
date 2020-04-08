@@ -63,10 +63,7 @@ describe('updateCodeMirrorDocs', () => {
 
   for (let n = 0; n < 10; n++) {
     it(`works with random edits (fuzz test ${n})`, () => {
-      let doc: TestDoc = Automerge.change(
-        Automerge.init(),
-        (draft) => (draft.text = new Automerge.Text())
-      )
+      let doc: TestDoc = Automerge.change(Automerge.init(), (draft) => (draft.text = new Automerge.Text()))
 
       const codeMirror = CodeMirror(div)
       const mutex = new Mutex()
@@ -85,7 +82,6 @@ describe('updateCodeMirrorDocs', () => {
 function monkeyModify(doc: TestDoc): TestDoc {
   const textLength = doc.text.length
   const index = Math.floor(Math.random() * textLength)
-  // const from = cm.posFromIndex(index)
   const editLength = randomPositiveInt(10)
   if (Math.random() < 0.7) {
     // Add text

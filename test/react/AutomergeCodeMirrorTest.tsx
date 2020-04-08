@@ -12,10 +12,10 @@ interface TestDoc {
 }
 
 describe('<AutomergeCodeMirror>', () => {
-  let doc: Automerge.FreezeObject<TestDoc>
-  const getDoc = () => doc
-  const setDoc = (newDoc: Automerge.FreezeObject<TestDoc>) => (doc = newDoc)
-  const getText = (doc: Automerge.FreezeObject<TestDoc>) => doc.text
+  let doc: TestDoc
+  const getCurrentDoc = () => doc
+  const setDoc = (newDoc: TestDoc) => (doc = newDoc)
+  const getText = (doc: TestDoc) => doc.text
   let host: HTMLElement
 
   beforeEach(() => {
@@ -29,7 +29,7 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const { connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
+    const { connectCodeMirror } = automergeCodeMirror(getCurrentDoc)
 
     let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
@@ -41,7 +41,7 @@ describe('<AutomergeCodeMirror>', () => {
       <AutomergeCodeMirror
         makeCodeMirror={makeCodeMirror}
         connectCodeMirror={connectCodeMirror}
-        getDoc={getDoc}
+        getCurrentDoc={getCurrentDoc}
         setDoc={setDoc}
         getText={getText}
       />,
@@ -55,7 +55,7 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(doc)
+    const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(getCurrentDoc)
 
     let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
@@ -67,7 +67,7 @@ describe('<AutomergeCodeMirror>', () => {
       <AutomergeCodeMirror
         makeCodeMirror={makeCodeMirror}
         connectCodeMirror={connectCodeMirror}
-        getDoc={getDoc}
+        getCurrentDoc={getCurrentDoc}
         setDoc={setDoc}
         getText={getText}
       />,
@@ -76,8 +76,7 @@ describe('<AutomergeCodeMirror>', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10))
 
-    setDoc(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello')))
-    updateCodeMirrors(doc)
+    setDoc(updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))))
     assert.strictEqual(codeMirror!.getValue(), 'hello')
   })
 })
