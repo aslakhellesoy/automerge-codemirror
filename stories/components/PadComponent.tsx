@@ -1,34 +1,35 @@
-import { change, Text } from 'automerge'
-import React, { FunctionComponent, useState } from 'react'
+import Automerge from 'automerge'
+import React, { FunctionComponent } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
 import automergeCodeMirror from '../../src/automergeCodeMirror'
+import { GetDoc, SetDoc } from '../../src/types'
 
 interface Pad {
-  sheets: Text[]
+  sheets: Automerge.Text[]
 }
 
 interface Props {
-  initialPad: Pad
+  useDoc: () => [GetDoc<Pad>, SetDoc<Pad>]
 }
 
-const PadComponent: FunctionComponent<Props> = ({ initialPad }) => {
-  const [pad, setPad] = useState(initialPad)
+const PadComponent: FunctionComponent<Props> = ({ useDoc }) => {
+  const [getDoc, setDoc] = useDoc()
 
-  const { connectCodeMirror } = automergeCodeMirror(initialPad)
+  const { connectCodeMirror } = automergeCodeMirror(getDoc())
 
   function createSheet() {
-    setPad(
-      change(pad, (draft) => {
+    setDoc(
+      Automerge.change(getDoc(), (draft) => {
         if (draft.sheets == undefined) draft.sheets = []
-        draft.sheets.push(new Text())
+        draft.sheets.push(new Automerge.Text())
       })
     )
   }
 
   function removeSheet() {
-    setPad(
-      change(pad, (draft) => {
+    setDoc(
+      Automerge.change(getDoc(), (draft) => {
         if (draft.sheets) {
           draft.sheets.shift()
         }
@@ -46,31 +47,26 @@ const PadComponent: FunctionComponent<Props> = ({ initialPad }) => {
     })
   }
 
-  let doc = pad
-  function setDoc(newDoc: Pad) {
-    doc = newDoc
-    setPad(newDoc)
-  }
-
-  function getDoc() {
-    return doc
-  }
-
   return (
     <div className="pad">
       <button onClick={createSheet}>New Sheet</button>
       <button onClick={removeSheet}>Remove Sheet</button>
-      {(pad.sheets || []).map((_, i) => (
-        <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
-          <AutomergeCodeMirror<Pad>
-            makeCodeMirror={makeCodeMirror}
-            connectCodeMirror={connectCodeMirror}
-            setDoc={setDoc}
-            getDoc={getDoc}
-            getText={(pad) => pad.sheets[i]}
-          />
-        </div>
-      ))}
+      {(getDoc().sheets || []).map((_, i) => {
+        function getText(doc: Pad | Automerge.Proxy<Pad>) {
+          return doc.sheets[i]
+        }
+        return (
+          <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
+            <AutomergeCodeMirror<Pad>
+              makeCodeMirror={makeCodeMirror}
+              connectCodeMirror={connectCodeMirror}
+              setDoc={setDoc}
+              getDoc={getDoc}
+              getText={getText}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }
