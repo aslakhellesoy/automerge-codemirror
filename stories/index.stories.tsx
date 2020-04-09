@@ -1,39 +1,19 @@
 import { storiesOf } from '@storybook/react'
-import React, { useState } from 'react'
+import React from 'react'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 
 import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
-import { ConnectCodeMirror, GetCurrentDoc, SetCurrentDoc, SetReactState } from '../src/types'
-import automergeCodeMirror from '../src/automergeCodeMirror'
-
-function makeUseAutomergeCodeMirror<D>(
-  getCurrentDoc: GetCurrentDoc<D>,
-  setCurrentDoc: SetCurrentDoc<D>
-): () => [GetCurrentDoc<D>, SetReactState<D>, ConnectCodeMirror<D>] {
-  return function useAutomergeCodeMirror() {
-    // @ts-ignore
-    const [doc, setDoc] = useState(getCurrentDoc())
-    const { connectCodeMirror, updateCodeMirrors } = automergeCodeMirror(getCurrentDoc)
-
-    function hookSetDoc(newDoc: D) {
-      const newDoc2 = updateCodeMirrors(newDoc)
-      setCurrentDoc(newDoc2)
-      setDoc(newDoc2)
-    }
-
-    return [getCurrentDoc, hookSetDoc, connectCodeMirror]
-  }
-}
+import { GetCurrentDoc, SetCurrentDoc } from '../src/types'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
   let pad1 = Automerge.init<Pad>()
   const getCurrentPad1: GetCurrentDoc<Pad> = () => pad1
   const setCurrentPad1: SetCurrentDoc<Pad> = (pad) => (pad1 = pad)
 
-  return <PadComponent useAutomergeCodeMirror={makeUseAutomergeCodeMirror(getCurrentPad1, setCurrentPad1)} />
+  return <PadComponent getCurrentDoc={getCurrentPad1} setCurrentDoc={setCurrentPad1} />
 
   // const useAutomergeCodeMirror1 = makeUseAutomergeCodeMirror(Automerge.init<Pad>())
   // const useAutomergeCodeMirror2 = makeUseAutomergeCodeMirror(Automerge.init<Pad>())
