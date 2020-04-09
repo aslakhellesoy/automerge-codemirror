@@ -10,12 +10,12 @@ import { GetText } from './types'
  * @param codeMirrorDoc the editor doc
  * @param editorChange the change
  */
-export default function updateAutomergeDoc<T>(
-  doc: T,
-  getText: GetText<T>,
+export default function updateAutomergeDoc<D>(
+  doc: D,
+  getText: GetText<D>,
   codeMirrorDoc: CodeMirror.Doc,
   editorChange: CodeMirror.EditorChange
-): T {
+): D {
   return Automerge.change(doc, (draft) => {
     const text = getText(draft)
     if (!text) return

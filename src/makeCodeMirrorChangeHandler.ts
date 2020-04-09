@@ -2,14 +2,14 @@ import Automerge from 'automerge'
 import CodeMirror from 'codemirror'
 import updateAutomergeDoc from './updateAutomergeDoc'
 import Mutex from './Mutex'
-import { GetCurrentDoc, GetText, SetDoc } from './types'
+import { GetCurrentDoc, GetText, SetReactState } from './types'
 
 type CodeMirrorChangeHandler = (instance: CodeMirror.Editor, changeObj: CodeMirror.EditorChangeLinkedList) => void
 
-export default function makeCodeMirrorChangeHandler<T>(
-  getCurrentDoc: GetCurrentDoc<T>,
-  setDoc: SetDoc<T>,
-  getText: GetText<T>,
+export default function makeCodeMirrorChangeHandler<D>(
+  getCurrentDoc: GetCurrentDoc<D>,
+  setDoc: SetReactState<D>,
+  getText: GetText<D>,
   mutex: Mutex
 ) {
   const text = getText(getCurrentDoc())

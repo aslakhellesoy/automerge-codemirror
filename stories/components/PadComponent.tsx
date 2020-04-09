@@ -2,14 +2,14 @@ import Automerge from 'automerge'
 import React, { FunctionComponent } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
-import { ConnectCodeMirror, GetCurrentDoc, SetDoc } from '../../src/types'
+import { ConnectCodeMirror, GetCurrentDoc, SetReactState } from '../../src/types'
 
 interface Pad {
   sheets: Automerge.Text[]
 }
 
 interface Props {
-  useAutomergeCodeMirror: () => [GetCurrentDoc<Pad>, SetDoc<Pad>, ConnectCodeMirror<Pad>]
+  useAutomergeCodeMirror: () => [GetCurrentDoc<Pad>, SetReactState<Pad>, ConnectCodeMirror<Pad>]
 }
 
 const PadComponent: FunctionComponent<Props> = ({ useAutomergeCodeMirror }) => {

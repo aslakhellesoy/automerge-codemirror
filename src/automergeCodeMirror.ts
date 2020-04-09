@@ -3,11 +3,11 @@ import Automerge from 'automerge'
 import updateCodeMirrorDocs from './updateCodeMirrorDocs'
 import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
 import Mutex from './Mutex'
-import { ConnectCodeMirror, GetCurrentDoc, GetText, SetDoc, UpdateCodeMirrors } from './types'
+import { ConnectCodeMirror, GetCurrentDoc, GetText, SetReactState, UpdateCodeMirrors } from './types'
 
-export default function automergeCodeMirror<T>(
-  getCurrentDoc: GetCurrentDoc<T>
-): { connectCodeMirror: ConnectCodeMirror<T>; updateCodeMirrors: UpdateCodeMirrors<T> } {
+export default function automergeCodeMirror<D>(
+  getCurrentDoc: GetCurrentDoc<D>
+): { connectCodeMirror: ConnectCodeMirror<D>; updateCodeMirrors: UpdateCodeMirrors<D> } {
   const mutex = new Mutex()
   const codeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
@@ -15,7 +15,7 @@ export default function automergeCodeMirror<T>(
     return codeMirrorMap.get(textObjectId)
   }
 
-  function connectCodeMirror(codeMirror: CodeMirror.Editor, setDoc: SetDoc<T>, getText: GetText<T>) {
+  function connectCodeMirror(codeMirror: CodeMirror.Editor, setDoc: SetReactState<D>, getText: GetText<D>) {
     const { textObjectId, codeMirrorChangeHandler } = makeCodeMirrorChangeHandler(getCurrentDoc, setDoc, getText, mutex)
 
     codeMirror.on('change', codeMirrorChangeHandler)
@@ -29,7 +29,7 @@ export default function automergeCodeMirror<T>(
     return disconnectCodeMirror
   }
 
-  function updateCodeMirrors(newDoc: T): T {
+  function updateCodeMirrors(newDoc: D): D {
     return updateCodeMirrorDocs(getCurrentDoc(), newDoc, getCodeMirror, mutex)
   }
 

@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react'
 import CodeMirror from 'codemirror'
-import { ConnectCodeMirror, GetCurrentDoc, GetText, SetDoc } from '../types'
+import { ConnectCodeMirror, GetCurrentDoc, GetText, SetReactState } from '../types'
 
-interface IProps<T> {
+interface IProps<D> {
   makeCodeMirror: (host: HTMLElement) => CodeMirror.Editor
-  connectCodeMirror: ConnectCodeMirror<T>
-  getCurrentDoc: GetCurrentDoc<T>
-  setDoc: SetDoc<T>
-  getText: GetText<T>
+  connectCodeMirror: ConnectCodeMirror<D>
+  getCurrentDoc: GetCurrentDoc<D>
+  setDoc: SetReactState<D>
+  getText: GetText<D>
 }
 
 const AutomergeCodeMirror = <T extends object>(props: IProps<T>) => {

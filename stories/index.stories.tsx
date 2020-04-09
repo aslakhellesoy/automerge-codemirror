@@ -6,19 +6,19 @@ import 'codemirror/theme/material.css'
 import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
-import { ConnectCodeMirror, GetCurrentDoc, SetCurrentDoc, SetDoc } from '../src/types'
+import { ConnectCodeMirror, GetCurrentDoc, SetCurrentDoc, SetReactState } from '../src/types'
 import automergeCodeMirror from '../src/automergeCodeMirror'
 
-function makeUseAutomergeCodeMirror(
-  getCurrentDoc: GetCurrentDoc<Pad>,
-  setCurrentDoc: SetCurrentDoc<Pad>
-): () => [GetCurrentDoc<Pad>, SetDoc<Pad>, ConnectCodeMirror<Pad>] {
+function makeUseAutomergeCodeMirror<D>(
+  getCurrentDoc: GetCurrentDoc<D>,
+  setCurrentDoc: SetCurrentDoc<D>
+): () => [GetCurrentDoc<D>, SetReactState<D>, ConnectCodeMirror<D>] {
   return function useAutomergeCodeMirror() {
     // @ts-ignore
     const [doc, setDoc] = useState(getCurrentDoc())
-    const { connectCodeMirror, updateCodeMirrors } = automergeCodeMirror<Pad>(getCurrentDoc)
+    const { connectCodeMirror, updateCodeMirrors } = automergeCodeMirror(getCurrentDoc)
 
-    function hookSetDoc(newDoc: Automerge.Doc<Pad>) {
+    function hookSetDoc(newDoc: D) {
       const newDoc2 = updateCodeMirrors(newDoc)
       setCurrentDoc(newDoc2)
       setDoc(newDoc2)
