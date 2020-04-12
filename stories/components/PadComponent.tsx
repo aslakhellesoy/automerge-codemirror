@@ -2,7 +2,8 @@ import Automerge from 'automerge'
 import React, { FunctionComponent } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
-import useAutomergeCodeMirror from '../../src/react/useAutomergeCodeMirror'
+import useAutomergeDoc from '../../src/react/useAutomergeDoc'
+import { ConnectCodeMirror } from '../../src/types'
 
 interface Pad {
   sheets: Automerge.Text[]
@@ -10,11 +11,11 @@ interface Pad {
 
 interface Props {
   watchableDoc: Automerge.WatchableDoc<Pad>
-  name: string
+  connectCodeMirror: ConnectCodeMirror<Pad>
 }
 
-const PadComponent: FunctionComponent<Props> = ({ watchableDoc }) => {
-  const [doc, connectCodeMirror] = useAutomergeCodeMirror(watchableDoc)
+const PadComponent: FunctionComponent<Props> = ({ watchableDoc, connectCodeMirror }) => {
+  const doc = useAutomergeDoc(watchableDoc)
 
   function createSheet() {
     watchableDoc.set(

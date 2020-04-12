@@ -5,9 +5,7 @@ import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
 import Mutex from './Mutex'
 import { ConnectCodeMirror, GetText } from './types'
 
-export default function automergeCodeMirror<D>(
-  watchableDoc: Automerge.WatchableDoc<D>
-): { connectCodeMirror: ConnectCodeMirror<D> } {
+export default function automergeCodeMirror<D>(watchableDoc: Automerge.WatchableDoc<D>): ConnectCodeMirror<D> {
   let doc = watchableDoc.get()
   const mutex = new Mutex()
   const codeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
@@ -16,11 +14,12 @@ export default function automergeCodeMirror<D>(
     return codeMirrorMap.get(textObjectId)
   }
 
-  watchableDoc.registerHandler(() => {
+  const handler = () => {
     const newDoc = watchableDoc.get()
     updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
     doc = newDoc
-  })
+  }
+  watchableDoc.registerHandler(handler)
 
   function connectCodeMirror(codeMirror: CodeMirror.Editor, getText: GetText<D>) {
     const { textObjectId, codeMirrorChangeHandler } = makeCodeMirrorChangeHandler(watchableDoc, getText, mutex)
@@ -36,9 +35,5 @@ export default function automergeCodeMirror<D>(
     return disconnectCodeMirror
   }
 
-  // function updateCodeMirrors(newDoc: D) {
-  //   updateCodeMirrorDocs(watchableDoc.get(), newDoc, getCodeMirror, mutex, name)
-  // }
-
-  return { connectCodeMirror }
+  return connectCodeMirror
 }

@@ -7,10 +7,14 @@ import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 import Mutex from '../src/Mutex'
+import { automergeCodeMirror } from '../src'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
   const watchableDoc1 = new Automerge.WatchableDoc(Automerge.init<Pad>())
   const watchableDoc2 = new Automerge.WatchableDoc(Automerge.init<Pad>())
+
+  const connectCodeMirror1 = automergeCodeMirror(watchableDoc1)
+  const connectCodeMirror2 = automergeCodeMirror(watchableDoc1)
 
   const mutex = new Mutex()
   watchableDoc1.registerHandler(() => {
@@ -32,8 +36,8 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
 
   return (
     <div>
-      <PadComponent watchableDoc={watchableDoc1} name={'pad1'} />
-      <PadComponent watchableDoc={watchableDoc2} name={'pad2'} />
+      <PadComponent watchableDoc={watchableDoc1} connectCodeMirror={connectCodeMirror1} />
+      <PadComponent watchableDoc={watchableDoc2} connectCodeMirror={connectCodeMirror2} />
     </div>
   )
 })

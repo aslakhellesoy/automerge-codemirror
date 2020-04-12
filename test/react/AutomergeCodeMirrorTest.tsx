@@ -27,7 +27,7 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const { connectCodeMirror } = automergeCodeMirror(watchableDoc)
+    const connectCodeMirror = automergeCodeMirror(watchableDoc)
 
     let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
@@ -52,7 +52,7 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const { connectCodeMirror } = automergeCodeMirror(watchableDoc)
+    const connectCodeMirror = automergeCodeMirror(watchableDoc)
 
     let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
