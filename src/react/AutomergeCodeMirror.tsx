@@ -1,23 +1,23 @@
 import React, { useEffect } from 'react'
 import CodeMirror from 'codemirror'
-import { ConnectCodeMirror, GetCurrentDoc, GetText, SetReactState } from '../types'
+import { ConnectCodeMirror, GetText } from '../types'
+import Automerge from 'automerge'
 
 interface IProps<D> {
   makeCodeMirror: (host: HTMLElement) => CodeMirror.Editor
   connectCodeMirror: ConnectCodeMirror<D>
-  getCurrentDoc: GetCurrentDoc<D>
-  setDoc: SetReactState<D>
+  watchableDoc: Automerge.WatchableDoc<D>
   getText: GetText<D>
 }
 
 const AutomergeCodeMirror = <T extends object>(props: IProps<T>) => {
-  const { makeCodeMirror, connectCodeMirror, getCurrentDoc, setDoc, getText } = props
+  const { makeCodeMirror, connectCodeMirror, watchableDoc, getText } = props
   let codeMirrorDiv: HTMLDivElement | null
 
   useEffect(() => {
     const codeMirror = makeCodeMirror(codeMirrorDiv!)
-    codeMirror.setValue(getText(getCurrentDoc()).toString())
-    return connectCodeMirror(codeMirror, setDoc, getText)
+    codeMirror.setValue(getText(watchableDoc.get()).toString())
+    return connectCodeMirror(codeMirror, getText)
   }, [])
 
   return <div ref={(div) => (codeMirrorDiv = div)} />

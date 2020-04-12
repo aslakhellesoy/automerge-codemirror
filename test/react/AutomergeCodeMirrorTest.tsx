@@ -12,14 +12,12 @@ interface TestDoc {
 }
 
 describe('<AutomergeCodeMirror>', () => {
-  let doc: TestDoc
-  const getCurrentDoc = () => doc
-  const setDoc = (newDoc: TestDoc) => (doc = newDoc)
+  let watchableDoc: Automerge.WatchableDoc<TestDoc>
   const getText = (doc: TestDoc) => doc.text
   let host: HTMLElement
 
   beforeEach(() => {
-    doc = Automerge.from({ text: new Automerge.Text() })
+    watchableDoc = new Automerge.WatchableDoc(Automerge.from({ text: new Automerge.Text() }))
     host = document.body.appendChild(document.createElement('div'))
   })
 
@@ -29,7 +27,7 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const { connectCodeMirror } = automergeCodeMirror(getCurrentDoc)
+    const { connectCodeMirror } = automergeCodeMirror(watchableDoc)
 
     let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
@@ -41,8 +39,7 @@ describe('<AutomergeCodeMirror>', () => {
       <AutomergeCodeMirror
         makeCodeMirror={makeCodeMirror}
         connectCodeMirror={connectCodeMirror}
-        getCurrentDoc={getCurrentDoc}
-        setDoc={setDoc}
+        watchableDoc={watchableDoc}
         getText={getText}
       />,
       host
@@ -51,11 +48,11 @@ describe('<AutomergeCodeMirror>', () => {
     await new Promise((resolve) => setTimeout(resolve, 10))
 
     codeMirror!.setValue('hello')
-    assert.strictEqual(doc.text.toString(), 'hello')
+    assert.strictEqual(watchableDoc.get().text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const { updateCodeMirrors, connectCodeMirror } = automergeCodeMirror<TestDoc>(getCurrentDoc)
+    const { connectCodeMirror } = automergeCodeMirror(watchableDoc)
 
     let codeMirror: CodeMirror.Editor
     function makeCodeMirror(host: HTMLElement) {
@@ -67,8 +64,7 @@ describe('<AutomergeCodeMirror>', () => {
       <AutomergeCodeMirror
         makeCodeMirror={makeCodeMirror}
         connectCodeMirror={connectCodeMirror}
-        getCurrentDoc={getCurrentDoc}
-        setDoc={setDoc}
+        watchableDoc={watchableDoc}
         getText={getText}
       />,
       host
@@ -76,7 +72,7 @@ describe('<AutomergeCodeMirror>', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10))
 
-    setDoc(updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))))
+    watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'hello')))
     assert.strictEqual(codeMirror!.getValue(), 'hello')
   })
 })

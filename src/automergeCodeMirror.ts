@@ -3,11 +3,12 @@ import Automerge from 'automerge'
 import updateCodeMirrorDocs from './updateCodeMirrorDocs'
 import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
 import Mutex from './Mutex'
-import { ConnectCodeMirror, GetCurrentDoc, GetText, SetReactState, UpdateCodeMirrors } from './types'
+import { ConnectCodeMirror, GetText } from './types'
 
 export default function automergeCodeMirror<D>(
-  getCurrentDoc: GetCurrentDoc<D>
-): { connectCodeMirror: ConnectCodeMirror<D>; updateCodeMirrors: UpdateCodeMirrors<D> } {
+  watchableDoc: Automerge.WatchableDoc<D>
+): { connectCodeMirror: ConnectCodeMirror<D> } {
+  let doc = watchableDoc.get()
   const mutex = new Mutex()
   const codeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
 
@@ -15,8 +16,14 @@ export default function automergeCodeMirror<D>(
     return codeMirrorMap.get(textObjectId)
   }
 
-  function connectCodeMirror(codeMirror: CodeMirror.Editor, setDoc: SetReactState<D>, getText: GetText<D>) {
-    const { textObjectId, codeMirrorChangeHandler } = makeCodeMirrorChangeHandler(getCurrentDoc, setDoc, getText, mutex)
+  watchableDoc.registerHandler(() => {
+    const newDoc = watchableDoc.get()
+    updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
+    doc = newDoc
+  })
+
+  function connectCodeMirror(codeMirror: CodeMirror.Editor, getText: GetText<D>) {
+    const { textObjectId, codeMirrorChangeHandler } = makeCodeMirrorChangeHandler(watchableDoc, getText, mutex)
 
     codeMirror.on('change', codeMirrorChangeHandler)
     codeMirrorMap.set(textObjectId, codeMirror)
@@ -29,9 +36,9 @@ export default function automergeCodeMirror<D>(
     return disconnectCodeMirror
   }
 
-  function updateCodeMirrors(newDoc: D): D {
-    return updateCodeMirrorDocs(getCurrentDoc(), newDoc, getCodeMirror, mutex)
-  }
+  // function updateCodeMirrors(newDoc: D) {
+  //   updateCodeMirrorDocs(watchableDoc.get(), newDoc, getCodeMirror, mutex, name)
+  // }
 
-  return { connectCodeMirror, updateCodeMirrors }
+  return { connectCodeMirror }
 }

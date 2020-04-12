@@ -2,7 +2,6 @@ import Automerge from 'automerge'
 import React, { FunctionComponent } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
-import { GetCurrentDoc, SetCurrentDoc } from '../../src/types'
 import useAutomergeCodeMirror from '../../src/react/useAutomergeCodeMirror'
 
 interface Pad {
@@ -10,16 +9,16 @@ interface Pad {
 }
 
 interface Props {
-  getCurrentDoc: GetCurrentDoc<Pad>
-  setCurrentDoc: SetCurrentDoc<Pad>
+  watchableDoc: Automerge.WatchableDoc<Pad>
+  name: string
 }
 
-const PadComponent: FunctionComponent<Props> = ({ getCurrentDoc, setCurrentDoc }) => {
-  const [connectCodeMirror, setDoc] = useAutomergeCodeMirror(getCurrentDoc, setCurrentDoc)
+const PadComponent: FunctionComponent<Props> = ({ watchableDoc }) => {
+  const [doc, connectCodeMirror] = useAutomergeCodeMirror(watchableDoc)
 
   function createSheet() {
-    setDoc(
-      Automerge.change(getCurrentDoc(), (draft) => {
+    watchableDoc.set(
+      Automerge.change(watchableDoc.get(), (draft) => {
         if (draft.sheets == undefined) draft.sheets = []
         draft.sheets.push(new Automerge.Text())
       })
@@ -27,8 +26,8 @@ const PadComponent: FunctionComponent<Props> = ({ getCurrentDoc, setCurrentDoc }
   }
 
   function removeSheet() {
-    setDoc(
-      Automerge.change(getCurrentDoc(), (draft) => {
+    watchableDoc.set(
+      Automerge.change(watchableDoc.get(), (draft) => {
         if (draft.sheets) {
           draft.sheets.shift()
         }
@@ -50,7 +49,7 @@ const PadComponent: FunctionComponent<Props> = ({ getCurrentDoc, setCurrentDoc }
     <div className="pad">
       <button onClick={createSheet}>New Sheet</button>
       <button onClick={removeSheet}>Remove Sheet</button>
-      {(getCurrentDoc().sheets || []).map((_, i) => {
+      {(doc.sheets || []).map((_, i) => {
         function getText(doc: Pad | Automerge.Proxy<Pad>) {
           return doc.sheets[i]
         }
@@ -59,8 +58,7 @@ const PadComponent: FunctionComponent<Props> = ({ getCurrentDoc, setCurrentDoc }
             <AutomergeCodeMirror<Pad>
               makeCodeMirror={makeCodeMirror}
               connectCodeMirror={connectCodeMirror}
-              getCurrentDoc={getCurrentDoc}
-              setDoc={setDoc}
+              watchableDoc={watchableDoc}
               getText={getText}
             />
           </div>

@@ -2,19 +2,18 @@ import Automerge from 'automerge'
 import CodeMirror from 'codemirror'
 import updateAutomergeDoc from './updateAutomergeDoc'
 import Mutex from './Mutex'
-import { GetCurrentDoc, GetText, SetReactState } from './types'
+import { GetText } from './types'
 
 type CodeMirrorChangeHandler = (instance: CodeMirror.Editor, changeObj: CodeMirror.EditorChangeLinkedList) => void
 
 export default function makeCodeMirrorChangeHandler<D>(
-  getCurrentDoc: GetCurrentDoc<D>,
-  setDoc: SetReactState<D>,
+  watchableDoc: Automerge.WatchableDoc<D>,
   getText: GetText<D>,
   mutex: Mutex
 ) {
-  const text = getText(getCurrentDoc())
+  const text = getText(watchableDoc.get())
   if (!text) {
-    throw new Error(`Cannot connect CodeMirror. Did not find text in ${JSON.stringify(getCurrentDoc())}`)
+    throw new Error(`Cannot connect CodeMirror. Did not find text in ${JSON.stringify(watchableDoc.get())}`)
   }
   const textObjectId = Automerge.getObjectId(text)
   const codeMirrorChangeHandler: CodeMirrorChangeHandler = (
@@ -23,8 +22,8 @@ export default function makeCodeMirrorChangeHandler<D>(
   ) => {
     if (change.origin !== 'automerge') {
       mutex.lock()
-      const newDoc = updateAutomergeDoc(getCurrentDoc(), getText, editor.getDoc(), change)
-      setDoc(newDoc)
+      const newDoc = updateAutomergeDoc(watchableDoc.get(), getText, editor.getDoc(), change)
+      watchableDoc.set(newDoc)
       mutex.release()
     }
   }

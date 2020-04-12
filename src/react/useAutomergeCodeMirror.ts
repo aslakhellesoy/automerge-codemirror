@@ -1,21 +1,20 @@
-import { ConnectCodeMirror, GetCurrentDoc, SetCurrentDoc } from '../types'
-import { useState } from 'react'
+import Automerge from 'automerge'
+import { useEffect, useState } from 'react'
+import { ConnectCodeMirror } from '../types'
 import automergeCodeMirror from '../automergeCodeMirror'
 
-export default function useAutomergeCodeMirror<D>(
-  getCurrentDoc: GetCurrentDoc<D>,
-  setCurrentDoc: SetCurrentDoc<D>
-): [ConnectCodeMirror<D>, SetCurrentDoc<D>] {
+export default function useAutomergeCodeMirror<D>(watchableDoc: Automerge.WatchableDoc<D>): [D, ConnectCodeMirror<D>] {
   // @ts-ignore
-  const [doc, setDoc] = useState(getCurrentDoc())
-  const { connectCodeMirror, updateCodeMirrors } = automergeCodeMirror(getCurrentDoc)
+  const [doc, setDoc] = useState(watchableDoc.get())
+  const { connectCodeMirror } = automergeCodeMirror(watchableDoc)
 
-  function hookSetDoc(newDoc: D) {
-    const newDoc2 = updateCodeMirrors(newDoc)
-    setCurrentDoc(newDoc2)
-    setDoc(newDoc2)
-    return newDoc
-  }
+  useEffect(() => {
+    const handler = () => {
+      setDoc(watchableDoc.get())
+    }
+    watchableDoc.registerHandler(handler)
+    return () => watchableDoc.unregisterHandler(handler)
+  })
 
-  return [connectCodeMirror, hookSetDoc]
+  return [doc, connectCodeMirror]
 }
