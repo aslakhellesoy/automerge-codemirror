@@ -55,7 +55,7 @@ const PadComponent: FunctionComponent<Props> = ({ watchableDoc, connectCodeMirro
           return doc.sheets[i]
         }
         return (
-          <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
+          <div key={i} className="sheet">
             <AutomergeCodeMirror<Pad>
               makeCodeMirror={makeCodeMirror}
               connectCodeMirror={connectCodeMirror}
