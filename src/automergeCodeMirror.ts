@@ -19,9 +19,11 @@ export default function automergeCodeMirror<D>(watchableDoc: Automerge.Watchable
     updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
     doc = newDoc
   }
-  watchableDoc.registerHandler(handler)
 
   function connectCodeMirror(codeMirror: CodeMirror.Editor, getText: GetText<D>) {
+    if (codeMirrorMap.size === 0) {
+      watchableDoc.registerHandler(handler)
+    }
     const { textObjectId, codeMirrorChangeHandler } = makeCodeMirrorChangeHandler(watchableDoc, getText, mutex)
 
     codeMirror.on('change', codeMirrorChangeHandler)
@@ -30,6 +32,9 @@ export default function automergeCodeMirror<D>(watchableDoc: Automerge.Watchable
     function disconnectCodeMirror() {
       codeMirror.off('change', codeMirrorChangeHandler)
       codeMirrorMap.delete(textObjectId)
+      if (codeMirrorMap.size === 0) {
+        watchableDoc.unregisterHandler(handler)
+      }
     }
 
     return disconnectCodeMirror
