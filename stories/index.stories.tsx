@@ -7,7 +7,7 @@ import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 import Mutex from '../src/Mutex'
-import { automergeCodeMirror } from '../src'
+import automergeCodeMirror from '../src/automergeCodeMirror'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
   const watchableDoc1 = new Automerge.WatchableDoc(Automerge.init<Pad>())

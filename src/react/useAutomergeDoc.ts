@@ -5,9 +5,7 @@ export default function useAutomergeDoc<D>(watchableDoc: Automerge.WatchableDoc<
   const [doc, setDoc] = useState(watchableDoc.get())
 
   useEffect(() => {
-    const handler = () => {
-      setDoc(watchableDoc.get())
-    }
+    const handler = () => setDoc(watchableDoc.get())
     watchableDoc.registerHandler(handler)
     return () => watchableDoc.unregisterHandler(handler)
   })

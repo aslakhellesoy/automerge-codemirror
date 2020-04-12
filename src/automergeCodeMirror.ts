@@ -21,6 +21,8 @@ export default function automergeCodeMirror<D>(watchableDoc: Automerge.Watchable
   }
 
   function connectCodeMirror(codeMirror: CodeMirror.Editor, getText: GetText<D>) {
+    codeMirror.setValue(getText(watchableDoc.get()).toString())
+
     if (codeMirrorMap.size === 0) {
       watchableDoc.registerHandler(handler)
     }

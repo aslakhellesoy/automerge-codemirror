@@ -59,7 +59,6 @@ const PadComponent: FunctionComponent<Props> = ({ watchableDoc, connectCodeMirro
             <AutomergeCodeMirror<Pad>
               makeCodeMirror={makeCodeMirror}
               connectCodeMirror={connectCodeMirror}
-              watchableDoc={watchableDoc}
               getText={getText}
             />
           </div>
