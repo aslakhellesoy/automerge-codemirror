@@ -11,6 +11,7 @@
     "nyc": "nyc --reporter=html --reporter=text mocha test/**/*.{ts,tsx}",
     "test": "mocha test/**/*.{ts,tsx}",
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "deploy-storybook": "storybook-to-ghpages"
