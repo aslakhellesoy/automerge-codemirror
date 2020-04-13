@@ -11,8 +11,6 @@ Trello-like application with multiple cards).
 
 It ships with a React component, but can also be used without React.
 
-Automerge-CodeMirror can be used with both JavaScript and TypeScript.
-
 ## Installation
 
     npm install automerge-codemirror
@@ -28,91 +26,40 @@ well over a network.
 
 ## General Usage
 
-The Automerge <-> CodeMirror synchronisation happens in the `updateAutomergeDoc` and `updateCodeMirrorDocs` functions.
-In order to prevent an infinite loop when changes are made, a `Mutex` object must be passed to the `updateCodeMirrorDocs` function.
+```typescript
+import { automergeCodeMirror } from 'automerge-codemirror'
 
-See unit tests for examples.
+// Create a connect function linked to an Automerge document
+const connectCodeMirror = automergeCodeMirror(watchableDoc)
+
+// Connect a CodeMirror instance
+const getText = (doc) => doc.text
+const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
+
+// Disconnect the CodeMirror instance
+disconnectCodeMirror()
+```
 
 ## React Usage
 
-The `AutomergeCodeMirror` React component encapsulates `updateAutomergeDoc`, so you don't have to use it directly.
-It is a _pure_ component, so it won't rerender (flicker) when the Automerge document changes. It instantiates a new
-native CodeMirror component when it mounts, and registers a change handler that will call `updateAutomergeDoc` when
-the user types.
-This handler is automatically unregistered when the component unmounts.
+```typescript jsx
+import { automergeCodeMirror } from 'automerge-codemirror'
 
-You also have two React hooks at your disposal `useAutomergeDoc` and `useCodeMirrorUpdater`, which handle external updates
-to the Automerge document.
+// Create a connect function linked to an Automerge document
+const connectCodeMirror = automergeCodeMirror(watchableDoc)
 
-To illustrate how all of this works, let's define a React component that puts them all to use. The `PadComponent` renders
-a CodeMirror editor for every `Text` object in a `Pad` Automerge document:
-
-```tsx
-import { change, Text, WatchableDoc } from 'automerge'
-import React, { FunctionComponent } from 'react'
-import {
-  AutomergeCodeMirror,
-  Link,
-  Mutex,
-  useAutomergeDoc,
-  useCodeMirrorUpdater,
-} from 'automerge-codemirror'
-
-interface Pad {
-  sheets: Text[]
-}
-
-interface Props {
-  watchableDoc: WatchableDoc<Pad>
-  mutex: Mutex
-  links: Set<Link<Pad>>
-}
-
-const PadComponent: FunctionComponent<Props> = ({
-  watchableDoc,
-  mutex,
-  links,
-}) => {
-  // This hook will cause a rerender whenever the Automerge document changes, so we can render new sheets
-  const doc = useAutomergeDoc(watchableDoc)
-
-  // This hook updates all the CodeMirror editors when the Automerge document changes
-  useCodeMirrorUpdater(watchableDoc, mutex, links)
-
-  return (
-    <div>
-      {doc.sheets.map((pad, i) => (
-        <div key={i}>
-          <AutomergeCodeMirror
-            watchableDoc={watchableDoc}
-            getText={doc => doc.sheets[i]}
-            links={links}
-            mutex={mutex}
-          />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export { PadComponent, Pad }
-```
-
-Now we can use it:
-
-```tsx
-<PadComponent
-  watchableDoc={watchableDoc}
-  mutex={new Mutex()}
-  links={new Set<Link<Pad>>()}
-/>
+// Connect a CodeMirror instance
+const getText = (doc) => doc.text
+const acm = (
+  <AutomergeCodeMirror
+    makeCodeMirror={(element) => CodeMirror(element)}
+    connectCodeMirror={connectCodeMirror}
+    getText={getText}
+  />
+)
 ```
 
 ## Synchronisation with other peers
 
 Automerge-CodeMirror is agnostic of how you choose to synchronize the linked Automerge document
-with other peers.
-
-You can use `Automerge.DocSet` / `Automerge.Connection` (as the example below),
-but you can also use any other mechanism supported by
-[Automerge](https://github.com/automerge/automerge).
+with other peers. Just register a handler with the `WatchableDoc` that does the synchronization.

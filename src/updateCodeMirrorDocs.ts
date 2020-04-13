@@ -1,5 +1,5 @@
-import { Diff, diff, getObjectId } from 'automerge'
-import Link from './Link'
+import Automerge from 'automerge'
+import CodeMirror from 'codemirror'
 import Mutex from './Mutex'
 
 /**
@@ -7,51 +7,38 @@ import Mutex from './Mutex'
  *
  * @param oldDoc
  * @param newDoc
- * @param links
+ * @param getCodeMirror
  * @param mutex
  */
-export default function updateCodeMirrorDocs<T>(
-  oldDoc: T,
-  newDoc: T,
-  links: Set<Link<T>>,
+export default function updateCodeMirrorDocs<D>(
+  oldDoc: D,
+  newDoc: D,
+  getCodeMirror: (textObjectId: Automerge.UUID) => CodeMirror.Editor | undefined,
   mutex: Mutex
-): T {
+): void {
   if (mutex.locked || !oldDoc) {
-    return newDoc
+    return
   }
-  const diffs = diff(oldDoc, newDoc)
+  const diffs = Automerge.diff(oldDoc, newDoc)
 
-  for (const d of diffs) {
-    if (d.type !== 'text') continue
-    const link = findLink(newDoc, links, d)
-    if (!link) continue
-    const codeMirrorDoc = link.codeMirror.getDoc()
+  for (const diff of diffs) {
+    if (diff.type !== 'text') continue
+    const codeMirror = getCodeMirror(diff.obj)
+    if (!codeMirror) continue
+    const codeMirrorDoc = codeMirror.getDoc()
 
-    switch (d.action) {
+    switch (diff.action) {
       case 'insert': {
-        const fromPos = codeMirrorDoc.posFromIndex(d.index!)
-        codeMirrorDoc.replaceRange(d.value, fromPos, undefined, 'automerge')
+        const fromPos = codeMirrorDoc.posFromIndex(diff.index!)
+        codeMirrorDoc.replaceRange(diff.value, fromPos, undefined, 'automerge')
         break
       }
       case 'remove': {
-        const fromPos = codeMirrorDoc.posFromIndex(d.index!)
-        const toPos = codeMirrorDoc.posFromIndex(d.index! + 1)
+        const fromPos = codeMirrorDoc.posFromIndex(diff.index!)
+        const toPos = codeMirrorDoc.posFromIndex(diff.index! + 1)
         codeMirrorDoc.replaceRange('', fromPos, toPos, 'automerge')
         break
       }
     }
   }
-
-  return newDoc
-}
-
-function findLink<T>(newDoc: T, links: Set<Link<T>>, op: Diff): Link<T> | null {
-  for (const link of links) {
-    const text = link.getText(newDoc)
-    const textObjectId = getObjectId(text)
-    if (op.obj === textObjectId) {
-      return link
-    }
-  }
-  return null
 }

@@ -1,43 +1,34 @@
-import { change, Text, WatchableDoc } from 'automerge'
+import Automerge from 'automerge'
 import React, { FunctionComponent } from 'react'
-import {
-  AutomergeCodeMirror,
-  Link,
-  Mutex,
-  useAutomergeDoc,
-  useCodeMirrorUpdater,
-} from '../../src'
+import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
+import CodeMirror from 'codemirror'
+import useAutomergeDoc from '../../src/react/useAutomergeDoc'
+import { ConnectCodeMirror } from '../../src/types'
 
 interface Pad {
-  sheets: Text[]
+  sheets: Automerge.Text[]
 }
 
 interface Props {
-  watchableDoc: WatchableDoc<Pad>
-  mutex: Mutex
-  links: Set<Link<Pad>>
+  watchableDoc: Automerge.WatchableDoc<Pad>
+  connectCodeMirror: ConnectCodeMirror<Pad>
 }
 
-const PadComponent: FunctionComponent<Props> = ({
-  watchableDoc,
-  mutex,
-  links,
-}) => {
+const PadComponent: FunctionComponent<Props> = ({ watchableDoc, connectCodeMirror }) => {
   const doc = useAutomergeDoc(watchableDoc)
-  useCodeMirrorUpdater(watchableDoc, mutex, links)
 
   function createSheet() {
     watchableDoc.set(
-      change(doc, draft => {
+      Automerge.change(watchableDoc.get(), (draft) => {
         if (draft.sheets == undefined) draft.sheets = []
-        draft.sheets.push(new Text())
+        draft.sheets.push(new Automerge.Text())
       })
     )
   }
 
   function removeSheet() {
     watchableDoc.set(
-      change(doc, draft => {
+      Automerge.change(watchableDoc.get(), (draft) => {
         if (draft.sheets) {
           draft.sheets.shift()
         }
@@ -45,27 +36,34 @@ const PadComponent: FunctionComponent<Props> = ({
     )
   }
 
+  function makeCodeMirror(element: HTMLElement): CodeMirror.Editor {
+    return CodeMirror(element, {
+      viewportMargin: Infinity,
+      lineWrapping: true,
+      extraKeys: {
+        Tab: false,
+      },
+    })
+  }
+
   return (
-    <div>
+    <div className="pad">
       <button onClick={createSheet}>New Sheet</button>
       <button onClick={removeSheet}>Remove Sheet</button>
-      {((doc && doc.sheets) || []).map((pad, i) => (
-        <div key={i} style={{ border: 'solid', borderWidth: 1, margin: 4 }}>
-          <AutomergeCodeMirror
-            watchableDoc={watchableDoc}
-            getText={doc => doc.sheets[i]}
-            links={links}
-            mutex={mutex}
-            editorConfiguration={{
-              viewportMargin: Infinity,
-              lineWrapping: true,
-              extraKeys: {
-                Tab: false,
-              },
-            }}
-          />
-        </div>
-      ))}
+      {(doc.sheets || []).map((_, i) => {
+        function getText(doc: Pad | Automerge.Proxy<Pad>) {
+          return doc.sheets[i]
+        }
+        return (
+          <div key={i} className="sheet">
+            <AutomergeCodeMirror<Pad>
+              makeCodeMirror={makeCodeMirror}
+              connectCodeMirror={connectCodeMirror}
+              getText={getText}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }
