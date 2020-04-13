@@ -24,11 +24,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - [live demo](https://aslakhellesoy.github.io/automerge-codemirror)
+- This repo now has a changelog
 
 ### Changed
 
 - Upgrade to Automerge 0.14.0
-- Simplified API, with the main objective to make it harder to use the library incorrectly
+- New, simplified API, with the main objective to make it harder to use the library incorrectly
 
 ## [4.0.5]
 
