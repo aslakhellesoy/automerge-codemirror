@@ -26,10 +26,10 @@ To run it locally:
 ## General Usage
 
 ```typescript
-import { automergeCodeMirror } from 'automerge-codemirror'
+import { connectAutomergeDoc } from 'automerge-codemirror'
 
 // Create a connect function linked to an Automerge document
-const connectCodeMirror = automergeCodeMirror(watchableDoc)
+const connectCodeMirror = connectAutomergeDoc(watchableDoc)
 
 // Connect a CodeMirror instance
 const getText = (doc) => doc.text
@@ -42,10 +42,10 @@ disconnectCodeMirror()
 ## React Usage
 
 ```typescript jsx
-import { automergeCodeMirror } from 'automerge-codemirror'
+import { connectAutomergeDoc, AutomergeCodeMirror } from 'automerge-codemirror'
 
 // Create a connect function linked to an Automerge document
-const connectCodeMirror = automergeCodeMirror(watchableDoc)
+const connectCodeMirror = connectAutomergeDoc(watchableDoc)
 
 // Connect a CodeMirror instance
 const getText = (doc) => doc.text
