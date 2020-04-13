@@ -1,6 +1,6 @@
 # Automerge-CodeMirror
 
-[![Build Status](https://travis-ci.org/aslakhellesoy/automerge-codemirror.svg?branch=master)](https://travis-ci.org/aslakhellesoy/automerge-codemirror)
+![Node.js CI](https://github.com/aslakhellesoy/automerge-codemirror/workflows/Node.js%20CI/badge.svg)
 
 Automerge-CodeMirror brings collaborative editing to CodeMirror by linking it to
 an `Automerge.Text` object.
