@@ -1,5 +1,5 @@
 import AutomergeCodeMirror from './react/AutomergeCodeMirror'
-import automergeCodeMirror from './automergeCodeMirror'
+import connectAutomergeDoc from './connectAutomergeDoc'
 import useAutomergeDoc from 'react/useAutomergeDoc'
 
-export { AutomergeCodeMirror, automergeCodeMirror, useAutomergeDoc }
+export { AutomergeCodeMirror, connectAutomergeDoc, useAutomergeDoc }

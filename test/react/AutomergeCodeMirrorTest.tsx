@@ -5,7 +5,7 @@ import Automerge from 'automerge'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import React from 'react'
 import assert from 'assert'
-import automergeCodeMirror from '../../src/automergeCodeMirror'
+import connectAutomergeDoc from '../../src/connectAutomergeDoc'
 import { ConnectCodeMirror, GetText } from '../../src/types'
 
 interface TestDoc {
@@ -28,14 +28,14 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const connectCodeMirror = automergeCodeMirror(watchableDoc)
+    const connectCodeMirror = connectAutomergeDoc(watchableDoc)
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, watchableDoc, getText, host)
     codeMirror.setValue('hello')
     assert.strictEqual(watchableDoc.get().text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const connectCodeMirror = automergeCodeMirror(watchableDoc)
+    const connectCodeMirror = connectAutomergeDoc(watchableDoc)
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, watchableDoc, getText, host)
     watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'hello')))
     assert.strictEqual(codeMirror.getValue(), 'hello')

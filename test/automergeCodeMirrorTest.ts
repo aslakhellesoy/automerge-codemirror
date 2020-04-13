@@ -1,7 +1,7 @@
 import assert from 'assert'
 import './codeMirrorEnv'
 import Automerge from 'automerge'
-import automergeCodeMirror from '../src/automergeCodeMirror'
+import connectAutomergeDoc from '../src/connectAutomergeDoc'
 import CodeMirror from 'codemirror'
 
 interface TestDoc {
@@ -26,7 +26,7 @@ describe('automergeCodeMirror', () => {
 
   describe('Automerge => CodeMirror', () => {
     it('handles 2 consecutive Automerge changes', () => {
-      const connectCodeMirror = automergeCodeMirror(watchableDoc)
+      const connectCodeMirror = connectAutomergeDoc(watchableDoc)
       const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
 
       watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'hello')))
@@ -41,7 +41,7 @@ describe('automergeCodeMirror', () => {
     })
 
     it('ignores Automerge changes after disconnection', () => {
-      const connectCodeMirror = automergeCodeMirror<TestDoc>(watchableDoc)
+      const connectCodeMirror = connectAutomergeDoc<TestDoc>(watchableDoc)
       const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
 
       watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'hello')))
@@ -57,7 +57,7 @@ describe('automergeCodeMirror', () => {
 
   describe('CodeMirror => Automerge', () => {
     it('handles 2 consecutive CodeMirror changes', () => {
-      const connectCodeMirror = automergeCodeMirror<TestDoc>(watchableDoc)
+      const connectCodeMirror = connectAutomergeDoc<TestDoc>(watchableDoc)
       connectCodeMirror(codeMirror, getText)
 
       codeMirror.replaceRange('hello', codeMirror.posFromIndex(0))

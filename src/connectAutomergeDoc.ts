@@ -5,7 +5,13 @@ import makeCodeMirrorChangeHandler from './makeCodeMirrorChangeHandler'
 import Mutex from './Mutex'
 import { ConnectCodeMirror, GetText } from './types'
 
-export default function automergeCodeMirror<D>(watchableDoc: Automerge.WatchableDoc<D>): ConnectCodeMirror<D> {
+/**
+ * Connect an Automerge document
+ *
+ * @param watchableDoc - the Automerge document that will be connected to CodeMirror instances
+ * @return ConnectCodeMirror - a function for connecting an Automerge.Text object in the document to a CodeMirror instance
+ */
+export default function connectAutomergeDoc<D>(watchableDoc: Automerge.WatchableDoc<D>): ConnectCodeMirror<D> {
   let doc = watchableDoc.get()
   const mutex = new Mutex()
   const codeMirrorMap = new Map<Automerge.UUID, CodeMirror.Editor>()
