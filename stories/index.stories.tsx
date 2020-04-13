@@ -6,38 +6,59 @@ import 'codemirror/theme/material.css'
 import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
-import Mutex from '../src/Mutex'
 import connectAutomergeDoc from '../src/connectAutomergeDoc'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
-  const watchableDoc1 = new Automerge.WatchableDoc(Automerge.init<Pad>())
-  const watchableDoc2 = new Automerge.WatchableDoc(Automerge.init<Pad>())
+  const watchableDocWilma = new Automerge.WatchableDoc(Automerge.init<Pad>())
+  const watchableDocFred = new Automerge.WatchableDoc(Automerge.init<Pad>())
+  const watchableDocBarney = new Automerge.WatchableDoc(Automerge.init<Pad>())
 
-  const connectCodeMirror1 = connectAutomergeDoc(watchableDoc1)
-  const connectCodeMirror2 = connectAutomergeDoc(watchableDoc1)
-
-  const mutex = new Mutex()
-  watchableDoc1.registerHandler(() => {
-    if (mutex.locked) {
-      return
-    }
-    mutex.lock()
-    watchableDoc2.set(Automerge.merge(watchableDoc2.get(), watchableDoc1.get()))
-    mutex.release()
-  })
-  watchableDoc2.registerHandler(() => {
-    if (mutex.locked) {
-      return
-    }
-    mutex.lock()
-    watchableDoc1.set(Automerge.merge(watchableDoc1.get(), watchableDoc2.get()))
-    mutex.release()
-  })
+  connect(watchableDocWilma, watchableDocFred)
+  connect(watchableDocFred, watchableDocBarney)
 
   return (
     <div>
-      <PadComponent watchableDoc={watchableDoc1} connectCodeMirror={connectCodeMirror1} />
-      <PadComponent watchableDoc={watchableDoc2} connectCodeMirror={connectCodeMirror2} />
+      <p>
+        Below are three actors - Wilma, Fred and Barney. They each have a Pad with sheets. Each sheet is connected to a
+        CodeMirror editor.
+      </p>
+      <p>
+        Wilma and Fred's pads are connected. Fred and Barney's pads are also connected. When either of them creates a
+        new pad or edits a sheet in a pad, changes are reflected in the other's pads and sheets.
+      </p>
+      <p>
+        The source code is{' '}
+        <a href="https://github.com/aslakhellesoy/automerge-codemirror/blob/master/stories/index.stories.tsx">here</a>.
+      </p>
+      <div className="pads">
+        <div>
+          <h3>Wilma</h3>
+          <PadComponent watchableDoc={watchableDocWilma} connectCodeMirror={connectAutomergeDoc(watchableDocWilma)} />
+        </div>
+        <div>
+          <h3>Fred</h3>
+          <PadComponent watchableDoc={watchableDocFred} connectCodeMirror={connectAutomergeDoc(watchableDocFred)} />
+        </div>
+        <div>
+          <h3>Barney</h3>
+          <PadComponent watchableDoc={watchableDocBarney} connectCodeMirror={connectAutomergeDoc(watchableDocBarney)} />
+        </div>
+      </div>
     </div>
   )
 })
+
+function connect<D>(watchableDocA: Automerge.WatchableDoc<D>, watchableDocB: Automerge.WatchableDoc<D>) {
+  watchableDocA.registerHandler(() =>
+    setIfDifferent(watchableDocB, Automerge.merge(watchableDocB.get(), watchableDocA.get()))
+  )
+  watchableDocB.registerHandler(() =>
+    setIfDifferent(watchableDocA, Automerge.merge(watchableDocA.get(), watchableDocB.get()))
+  )
+}
+
+function setIfDifferent<D>(watchableDoc: Automerge.WatchableDoc<D>, doc: D) {
+  if (watchableDoc.get() !== doc) {
+    watchableDoc.set(doc)
+  }
+}

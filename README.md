@@ -15,14 +15,13 @@ It ships with a React component, but can also be used without React.
 
     npm install automerge-codemirror
 
-## Demo
+## Live Demo
+
+[Check it out here](https://aslakhellesoy.github.io/automerge-codemirror)
+
+To run it locally:
 
     yarn storybook
-
-![example](./example.gif)
-
-What you see above is 3 Automerge documents synchronised without a network, but it works equally
-well over a network.
 
 ## General Usage
 

@@ -3,6 +3,10 @@
   background: inherit;
 }
 
+.pads {
+  display: flex;
+}
+
 .pad {
   margin: 10px;
   border: black solid 1px;
