@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Upgrade to Automerge 0.14.0
 - New, simplified API, with the main objective to make it harder to use the library incorrectly
 
+### Removed
+
+- The `dist` directory is no longer in git
+
 ## [4.0.5]
 
 - changelog didn't exist - look at the diff
@@ -73,7 +77,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- Releases -->
 
-[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.5...master
+[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.0...master
+[5.0.0]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.5...v5.0.0
 [4.0.5]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.4...v4.0.5
 [4.0.4]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.3...v4.0.4
 [4.0.3]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.2...v4.0.3
