@@ -13,13 +13,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Internals: Make Automerge.Text<->CodeMirror code more cohesive to improve code readability
-
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+## [Unreleased]
+
+### Changed
+
+- Internals: Make Automerge.Text<->CodeMirror code more cohesive to improve code readability
+
+### Fixed
+
+- Fix export of `useAutomergeDoc`
 
 ## [5.0.0]
 
