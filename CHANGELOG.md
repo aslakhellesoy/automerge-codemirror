@@ -87,7 +87,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- Releases -->
 
-[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.0...master
+[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.1...master
+[5.0.1]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.5...v5.0.0
 [4.0.5]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.4...v4.0.5
 [4.0.4]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.3...v4.0.4
