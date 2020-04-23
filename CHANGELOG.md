@@ -93,7 +93,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- Releases -->
 
-[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.1...master
+[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.2...master
+[5.0.2]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.1...v5.0.2
 [5.0.1]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.5...v5.0.0
 [4.0.5]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.4...v4.0.5
