@@ -8,7 +8,7 @@ interface IProps<D> {
   getText: GetText<D>
 }
 
-const AutomergeCodeMirror = <T extends object>(props: IProps<T>) => {
+const AutomergeCodeMirror = <D extends object>(props: IProps<D>) => {
   const { makeCodeMirror, connectCodeMirror, getText } = props
   let codeMirrorDiv: HTMLDivElement | null
 
