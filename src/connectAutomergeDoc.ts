@@ -38,6 +38,7 @@ export default function connectAutomergeDoc<D>(watchableDoc: Automerge.Watchable
       throw new Error(`Cannot connect CodeMirror. Did not find text in ${JSON.stringify(watchableDoc.get())}`)
     }
     if (codeMirrorByTextId.size === 0) {
+      doc = watchableDoc.get()
       // We only start listening for Automerge document changes when the first CodeMirror instance is connected.
       watchableDoc.registerHandler(watchableDocHandler)
     }

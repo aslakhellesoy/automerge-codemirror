@@ -19,7 +19,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-## [Unreleased]
+## [5.0.2]
+
+### Fixed
+
+- Fix a bug where automerge updates would be applied several times to CodeMirror
+
+## [5.0.1]
 
 ### Changed
 

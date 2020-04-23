@@ -53,6 +53,28 @@ describe('automergeCodeMirror', () => {
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
     })
+
+    it('handles document update before CodeMirror is connected', () => {
+      const connectCodeMirror = connectAutomergeDoc<TestDoc>(watchableDoc)
+
+      watchableDoc.set(
+        Automerge.change(watchableDoc.get(), (proxy) => {
+          proxy.text.insertAt!(0, 'World')
+        })
+      )
+
+      connectCodeMirror(codeMirror, getText)
+
+      assert.strictEqual(codeMirror.getValue(), 'World')
+
+      watchableDoc.set(
+        Automerge.change(watchableDoc.get(), (proxy) => {
+          proxy.text.insertAt!(0, 'Hello ')
+        })
+      )
+
+      assert.strictEqual(codeMirror.getValue(), 'Hello World')
+    })
   })
 
   describe('CodeMirror => Automerge', () => {
