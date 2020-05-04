@@ -8,11 +8,12 @@ import updateAutomergeDoc from './updateAutomergeDoc'
 /**
  * Connect an Automerge document
  *
- * @param watchableDoc - the Automerge document that will be connected to CodeMirror instances
+ * @param doc - the Automerge document that will be connected to CodeMirror instances
+ * @param notify - a callback that gets called when the doc is updated as the result of an editor change
  * @return ConnectCodeMirror - a function for connecting an Automerge.Text object in the document to a CodeMirror instance
  */
 export default function connectAutomergeDoc2<D>(
-  doc: Automerge.Doc<D>,
+  doc: D,
   notify: Notify<D>
 ): { connectCodeMirror: ConnectCodeMirror<D>; updateDoc: UpdateDoc<D> } {
   const mutex = new Mutex()
@@ -59,7 +60,7 @@ export default function connectAutomergeDoc2<D>(
     return disconnectCodeMirror
   }
 
-  function updateDoc(newDoc: Automerge.Doc<D>) {
+  function updateDoc(newDoc: D) {
     updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
     doc = newDoc
   }
