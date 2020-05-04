@@ -44,8 +44,8 @@ export default function connectAutomergeDoc2<D>(
     const codeMirrorChangeHandler = (editor: CodeMirror.Editor, change: CodeMirror.EditorChange) => {
       if (change.origin !== 'automerge') {
         mutex.lock()
-        const newDoc = updateAutomergeDoc(doc, getText, editor.getDoc(), change)
-        notify(newDoc)
+        doc = updateAutomergeDoc(doc, getText, editor.getDoc(), change)
+        notify(doc)
         mutex.release()
       }
     }

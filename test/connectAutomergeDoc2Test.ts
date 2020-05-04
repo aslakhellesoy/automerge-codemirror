@@ -82,18 +82,18 @@ describe('connectAutomergeDoc2', () => {
     })
   })
 
-  // describe('CodeMirror => Automerge', () => {
-  //   it('handles 2 consecutive CodeMirror changes', () => {
-  //     const connectCodeMirror = connectAutomergeDoc<TestDoc>(watchableDoc)
-  //     connectCodeMirror(codeMirror, getText)
-  //
-  //     codeMirror.replaceRange('hello', codeMirror.posFromIndex(0))
-  //     assert.strictEqual(codeMirror.getValue(), 'hello')
-  //     assert.strictEqual(watchableDoc.get().text.toString(), 'hello')
-  //
-  //     codeMirror.replaceRange('world', codeMirror.posFromIndex(0))
-  //     assert.strictEqual(codeMirror.getValue(), 'worldhello')
-  //     assert.strictEqual(watchableDoc.get().text.toString(), 'worldhello')
-  //   })
-  // })
+  describe('CodeMirror => Automerge', () => {
+    it('handles 2 consecutive CodeMirror changes', () => {
+      const { connectCodeMirror } = connectAutomergeDoc2<TestDoc>(doc, (newDoc) => (doc = newDoc))
+      connectCodeMirror(codeMirror, getText)
+
+      codeMirror.replaceRange('hello', codeMirror.posFromIndex(0))
+      assert.strictEqual(codeMirror.getValue(), 'hello')
+      assert.strictEqual(doc.text.toString(), 'hello')
+
+      codeMirror.replaceRange('world', codeMirror.posFromIndex(0))
+      assert.strictEqual(codeMirror.getValue(), 'worldhello')
+      assert.strictEqual(doc.text.toString(), 'worldhello')
+    })
+  })
 })
