@@ -43,42 +43,43 @@ describe('connectAutomergeDoc2', () => {
       disconnectCodeMirror()
     })
 
-    // it('ignores Automerge changes after disconnection', () => {
-    //   const notify = () => undefined
-    //   const connectCodeMirror = connectAutomergeDoc<TestDoc>(watchableDoc)
-    //   const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
-    //
-    //   watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'hello')))
-    //
-    //   assert.strictEqual(codeMirror.getValue(), 'hello')
-    //   disconnectCodeMirror()
-    //
-    //   watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'world')))
-    //
-    //   assert.strictEqual(codeMirror.getValue(), 'hello')
-    // })
-    //
-    // it('handles document update before CodeMirror is connected', () => {
-    //   const connectCodeMirror = connectAutomergeDoc<TestDoc>(watchableDoc)
-    //
-    //   watchableDoc.set(
-    //     Automerge.change(watchableDoc.get(), (proxy) => {
-    //       proxy.text.insertAt!(0, 'World')
-    //     })
-    //   )
-    //
-    //   connectCodeMirror(codeMirror, getText)
-    //
-    //   assert.strictEqual(codeMirror.getValue(), 'World')
-    //
-    //   watchableDoc.set(
-    //     Automerge.change(watchableDoc.get(), (proxy) => {
-    //       proxy.text.insertAt!(0, 'Hello ')
-    //     })
-    //   )
-    //
-    //   assert.strictEqual(codeMirror.getValue(), 'Hello World')
-    // })
+    it('ignores Automerge changes after disconnection', () => {
+      const notify = () => undefined
+      const { connectCodeMirror, updateDoc } = connectAutomergeDoc2(doc, notify)
+      const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
+
+      doc = Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
+      updateDoc(doc)
+
+      assert.strictEqual(codeMirror.getValue(), 'hello')
+      disconnectCodeMirror()
+
+      doc = Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
+      updateDoc(doc)
+
+      assert.strictEqual(codeMirror.getValue(), 'hello')
+    })
+
+    it('handles document update before CodeMirror is connected', () => {
+      const notify = () => undefined
+      const { connectCodeMirror, updateDoc } = connectAutomergeDoc2(doc, notify)
+
+      doc = Automerge.change(doc, (proxy) => {
+        proxy.text.insertAt!(0, 'World')
+      })
+      updateDoc(doc)
+
+      connectCodeMirror(codeMirror, getText)
+
+      assert.strictEqual(codeMirror.getValue(), 'World')
+
+      doc = Automerge.change(doc, (proxy) => {
+        proxy.text.insertAt!(0, 'Hello ')
+      })
+      updateDoc(doc)
+
+      assert.strictEqual(codeMirror.getValue(), 'Hello World')
+    })
   })
 
   // describe('CodeMirror => Automerge', () => {
