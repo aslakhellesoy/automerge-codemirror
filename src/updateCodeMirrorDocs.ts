@@ -19,7 +19,10 @@ export default function updateCodeMirrorDocs<D>(
   if (mutex.locked || !oldDoc) {
     return
   }
+  const now = Date.now()
   const diffs = Automerge.diff(oldDoc, newDoc)
+  const duration = Date.now() - now
+  console.log(`Diff duration ${duration}`)
 
   for (const diff of diffs) {
     if (diff.type !== 'text') continue
@@ -30,13 +33,20 @@ export default function updateCodeMirrorDocs<D>(
     switch (diff.action) {
       case 'insert': {
         const fromPos = codeMirrorDoc.posFromIndex(diff.index!)
+        let now = Date.now()
         codeMirrorDoc.replaceRange(diff.value, fromPos, undefined, 'automerge')
+        let duration = Date.now() - now
+        console.log(`replaceRange duration add ${duration}`)
         break
       }
       case 'remove': {
         const fromPos = codeMirrorDoc.posFromIndex(diff.index!)
         const toPos = codeMirrorDoc.posFromIndex(diff.index! + 1)
+        let now = Date.now()
         codeMirrorDoc.replaceRange('', fromPos, toPos, 'automerge')
+        let duration = Date.now() - now
+        console.log(`replaceRange duration delete ${duration}`)
+        break
         break
       }
     }

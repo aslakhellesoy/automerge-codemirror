@@ -8,7 +8,7 @@ interface TestDoc {
   text: Automerge.Text
 }
 
-describe('automergeCodeMirror', () => {
+describe('connectAutomergeDoc', () => {
   let watchableDoc: Automerge.WatchableDoc<TestDoc>
   const getText = (doc: TestDoc) => doc.text
   let host: HTMLElement

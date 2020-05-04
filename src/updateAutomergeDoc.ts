@@ -11,13 +11,13 @@ import { GetText } from './types'
  * @param editorChange the change
  */
 export default function updateAutomergeDoc<D>(
-  doc: D,
+  doc: Automerge.Doc<D>,
   getText: GetText<D>,
   codeMirrorDoc: CodeMirror.Doc,
   editorChange: CodeMirror.EditorChange
-): D {
-  return Automerge.change(doc, (draft) => {
-    const text = getText(draft)
+): Automerge.Doc<D> {
+  return Automerge.change<D>(doc, (proxy: Automerge.Proxy<D>) => {
+    const text = getText(proxy)
     if (!text) return
     const startPos = codeMirrorDoc.indexFromPos(editorChange.from)
 
