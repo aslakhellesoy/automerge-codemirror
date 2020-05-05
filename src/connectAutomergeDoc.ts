@@ -60,10 +60,10 @@ export default function connectAutomergeDoc<D>(
     return disconnectCodeMirror
   }
 
-  function updateDoc(newDoc: D) {
+  function updateCodeMirrors(newDoc: D) {
     updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
     doc = newDoc
   }
 
-  return { connectCodeMirror, updateCodeMirrors: updateDoc }
+  return { connectCodeMirror, updateCodeMirrors }
 }

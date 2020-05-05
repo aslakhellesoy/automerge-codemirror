@@ -1,5 +1,5 @@
 import Automerge from 'automerge'
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
 import { ConnectCodeMirror, Notify } from '../../src/types'
@@ -9,20 +9,20 @@ interface Pad {
 }
 
 interface Props {
-  initialDoc: Automerge.Doc<Pad>
+  doc: Automerge.Doc<Pad>
   connectCodeMirror: ConnectCodeMirror<Pad>
   notify: Notify<Pad>
 }
 
-const PadComponent: FunctionComponent<Props> = ({ initialDoc, connectCodeMirror, notify }) => {
-  const [doc, setDoc] = useState(initialDoc)
+const PadComponent: FunctionComponent<Props> = ({ doc, connectCodeMirror, notify }) => {
+  // const [doc, setDoc] = useState(initialDoc)
 
   function createSheet() {
     const newDoc = Automerge.change(doc, (proxy) => {
       if (proxy.sheets == undefined) proxy.sheets = []
       proxy.sheets.push(new Automerge.Text())
     })
-    setDoc(newDoc)
+    // setDoc(newDoc)
     notify(newDoc)
   }
 
@@ -32,7 +32,7 @@ const PadComponent: FunctionComponent<Props> = ({ initialDoc, connectCodeMirror,
         proxy.sheets.shift()
       }
     })
-    setDoc(newDoc)
+    // setDoc(newDoc)
     notify(newDoc)
   }
 

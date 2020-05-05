@@ -23,8 +23,8 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
     const newDoc = peerFred.applyMessage(msg, docFred)
 
     if (newDoc) {
+      updateCodeMirrorsFred(newDoc)
       setDocFred(newDoc)
-      updateDocFred(newDoc)
     }
   })
 
@@ -32,8 +32,8 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
     const newDoc = peerBarney.applyMessage(msg, docBarney)
 
     if (newDoc) {
+      updateCodeMirrorsBarney(newDoc)
       setDocBarney(newDoc)
-      updateDocBarney(newDoc)
     }
   })
 
@@ -41,8 +41,8 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
     const newDoc = peerWilma.applyMessage(msg, docWilma)
 
     if (newDoc) {
+      updateCodeMirrorsWilma(newDoc)
       setDocWilma(newDoc)
-      updateDocWilma(newDoc)
     }
   })
 
@@ -50,18 +50,18 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
   const notifyFred = peerFred.notify.bind(peerFred)
   const notifyBarney = peerBarney.notify.bind(peerBarney)
 
-  const { connectCodeMirror: connectCodeMirrorWilma, updateDoc: updateDocWilma } = connectAutomergeDoc(
+  const { connectCodeMirror: connectCodeMirrorWilma, updateCodeMirrors: updateCodeMirrorsWilma } = connectAutomergeDoc(
     docWilma,
     notifyWilma
   )
-  const { connectCodeMirror: connectCodeMirrorFred, updateDoc: updateDocFred } = connectAutomergeDoc(
+  const { connectCodeMirror: connectCodeMirrorFred, updateCodeMirrors: updateCodeMirrorsFred } = connectAutomergeDoc(
     docFred,
     notifyFred
   )
-  const { connectCodeMirror: connectCodeMirrorBarney, updateDoc: updateDocBarney } = connectAutomergeDoc(
-    docBarney,
-    notifyBarney
-  )
+  const {
+    connectCodeMirror: connectCodeMirrorBarney,
+    updateCodeMirrors: updateCodeMirrorsBarney,
+  } = connectAutomergeDoc(docBarney, notifyBarney)
 
   return (
     <div>
@@ -80,15 +80,15 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
       <div className="pads">
         <div>
           <h3>Wilma</h3>
-          <PadComponent initialDoc={docWilma} connectCodeMirror={connectCodeMirrorWilma} notify={notifyWilma} />
+          <PadComponent doc={docWilma} connectCodeMirror={connectCodeMirrorWilma} notify={notifyWilma} />
         </div>
         <div>
           <h3>Fred</h3>
-          <PadComponent initialDoc={docFred} connectCodeMirror={connectCodeMirrorFred} notify={notifyFred} />
+          <PadComponent doc={docFred} connectCodeMirror={connectCodeMirrorFred} notify={notifyFred} />
         </div>
         <div>
           <h3>Barney</h3>
-          <PadComponent initialDoc={docBarney} connectCodeMirror={connectCodeMirrorBarney} notify={notifyBarney} />
+          <PadComponent doc={docBarney} connectCodeMirror={connectCodeMirrorBarney} notify={notifyBarney} />
         </div>
       </div>
     </div>
