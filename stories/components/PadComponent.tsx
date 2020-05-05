@@ -2,8 +2,6 @@ import Automerge from 'automerge'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
-import { ConnectCodeMirror, Notify } from '../../src/types'
-import { Message } from 'manymerge'
 import PeerDoc from '../../src/manymerge/PeerDoc'
 import connectAutomergeDoc from '../../src/connectAutomergeDoc'
 
@@ -12,30 +10,19 @@ interface Pad {
 }
 
 interface Props {
-  initialDoc: Automerge.Doc<Pad>
-  sendMsg: (msg: Message) => void
-  subscribe: (peer: PeerDoc<Pad>, setDoc: (newDoc: Automerge.Doc<Pad>) => void) => void
-  notify: Notify<Pad>
+  peerDoc: PeerDoc<Pad>
 }
 
-function usePeerDoc<T>(
-  sendMsg: (msg: Message) => void,
-  subscribe: (peerDoc: PeerDoc<T>, setDoc: (newDoc: Automerge.Doc<T>) => void) => void
-) {
-  const peerDoc = new PeerDoc<T>(sendMsg)
-  const state = useState(Automerge.init<T>())
-  const [, setDoc] = state
+const PadComponent: FunctionComponent<Props> = ({ peerDoc }) => {
+  const [doc, setDoc] = useState(peerDoc.doc)
+  const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, (newDoc) => peerDoc.notify(newDoc))
 
   useEffect(() => {
-    subscribe(peerDoc, setDoc)
+    return peerDoc.subscribe((newDoc) => {
+      setDoc(newDoc)
+      updateCodeMirrors(newDoc)
+    })
   }, [])
-
-  return state
-}
-
-const PadComponent: FunctionComponent<Props> = ({ sendMsg, subscribe, notify }) => {
-  //const [doc, setDoc] = usePeerDoc(sendMsg, subscribe)
-  const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, notify)
 
   function createSheet() {
     const newDoc = Automerge.change(doc, (proxy) => {
@@ -43,7 +30,7 @@ const PadComponent: FunctionComponent<Props> = ({ sendMsg, subscribe, notify }) 
       proxy.sheets.push(new Automerge.Text())
     })
     setDoc(newDoc)
-    notify(newDoc)
+    peerDoc.notify(newDoc)
   }
 
   function removeSheet() {
@@ -53,7 +40,7 @@ const PadComponent: FunctionComponent<Props> = ({ sendMsg, subscribe, notify }) 
       }
     })
     setDoc(newDoc)
-    notify(newDoc)
+    peerDoc.notify(newDoc)
   }
 
   function makeCodeMirror(element: HTMLElement): CodeMirror.Editor {

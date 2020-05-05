@@ -6,23 +6,16 @@ import 'codemirror/theme/material.css'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 
-import { Message } from 'manymerge'
 import PeerDoc from '../src/manymerge/PeerDoc'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
-  let wilmasPeerDoc: PeerDoc<Pad> | undefined
-  let fredsPeerDoc: PeerDoc<Pad> | undefined
-  let barneysPeerDoc: PeerDoc<Pad> | undefined
+  let wilmasPeerDoc: PeerDoc<Pad>
+  let fredsPeerDoc: PeerDoc<Pad>
+  let barneysPeerDoc: PeerDoc<Pad>
 
-  const sendMsgWilma = (msg: Message) => {
-    if (wilmasPeerDoc) wilmasPeerDoc.applyMessage(msg)
-  }
-  let sendMsgFred = (msg: Message) => {
-    if (fredsPeerDoc) fredsPeerDoc.applyMessage(msg)
-  }
-  let sendMsgBarney = (msg: Message) => {
-    if (barneysPeerDoc) barneysPeerDoc.applyMessage(msg)
-  }
+  wilmasPeerDoc = new PeerDoc<Pad>((msg) => fredsPeerDoc.applyMessage(msg))
+  fredsPeerDoc = new PeerDoc<Pad>((msg) => barneysPeerDoc.applyMessage(msg))
+  barneysPeerDoc = new PeerDoc<Pad>((msg) => wilmasPeerDoc.applyMessage(msg))
 
   return (
     <div>
@@ -41,19 +34,15 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
       <div className="pads">
         <div>
           <h3>Wilma</h3>
-          <PadComponent
-            sendMsg={sendMsgWilma}
-            subscribe={(peerDoc, setDoc) => (wilmasPeerDoc = peerDoc)}
-            notify={notifyWilma}
-          />
+          <PadComponent peerDoc={wilmasPeerDoc} />
         </div>
         <div>
           <h3>Fred</h3>
-          <PadComponent sendMsg={sendMsgFred} connectCodeMirror={connectCodeMirrorFred} notify={notifyFred} />
+          <PadComponent peerDoc={fredsPeerDoc} />
         </div>
         <div>
           <h3>Barney</h3>
-          <PadComponent sendMsg={sendMsgBarney} connectCodeMirror={connectCodeMirrorBarney} notify={notifyBarney} />
+          <PadComponent peerDoc={barneysPeerDoc} />
         </div>
       </div>
     </div>
