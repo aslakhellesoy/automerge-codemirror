@@ -2,7 +2,7 @@ import CodeMirror from 'codemirror'
 import Automerge from 'automerge'
 import updateCodeMirrorDocs from './updateCodeMirrorDocs'
 import Mutex from './Mutex'
-import { ConnectCodeMirror, GetText, Notify, UpdateDoc } from './types'
+import { ConnectCodeMirror, GetText, Notify, UpdateCodemirrors } from './types'
 import updateAutomergeDoc from './updateAutomergeDoc'
 
 /**
@@ -15,7 +15,7 @@ import updateAutomergeDoc from './updateAutomergeDoc'
 export default function connectAutomergeDoc<D>(
   doc: D,
   notify: Notify<D>
-): { connectCodeMirror: ConnectCodeMirror<D>; updateDoc: UpdateDoc<D> } {
+): { connectCodeMirror: ConnectCodeMirror<D>; updateCodeMirrors: UpdateCodemirrors<D> } {
   const mutex = new Mutex()
   const codeMirrorByTextId = new Map<Automerge.UUID, CodeMirror.Editor>()
 
@@ -65,5 +65,5 @@ export default function connectAutomergeDoc<D>(
     doc = newDoc
   }
 
-  return { connectCodeMirror, updateDoc }
+  return { connectCodeMirror, updateCodeMirrors: updateDoc }
 }

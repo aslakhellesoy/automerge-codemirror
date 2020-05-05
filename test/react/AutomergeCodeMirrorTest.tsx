@@ -28,16 +28,19 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const { connectCodeMirror } = connectAutomergeDoc(doc, () => {})
+    const { connectCodeMirror } = connectAutomergeDoc(doc, (newDoc) => (doc = newDoc))
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, getText, host)
     codeMirror.setValue('hello')
     assert.strictEqual(doc.text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const { connectCodeMirror } = connectAutomergeDoc(doc, () => {})
+    const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, () => {
+      throw new Error('Unexpected')
+    })
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, getText, host)
     doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
+    updateCodeMirrors(doc)
     assert.strictEqual(codeMirror.getValue(), 'hello')
   })
 })

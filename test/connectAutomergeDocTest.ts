@@ -27,16 +27,16 @@ describe('connectAutomergeDoc2', () => {
   describe('Automerge => CodeMirror', () => {
     it('handles 2 consecutive Automerge changes', () => {
       const notify = () => undefined
-      const { connectCodeMirror, updateDoc } = connectAutomergeDoc(doc, notify)
+      const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, notify)
       const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
 
       doc = Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
-      updateDoc(doc)
+      updateCodeMirrors(doc)
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
 
       doc = Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
-      updateDoc(doc)
+      updateCodeMirrors(doc)
 
       assert.strictEqual(codeMirror.getValue(), 'worldhello')
 
@@ -45,29 +45,29 @@ describe('connectAutomergeDoc2', () => {
 
     it('ignores Automerge changes after disconnection', () => {
       const notify = () => undefined
-      const { connectCodeMirror, updateDoc } = connectAutomergeDoc(doc, notify)
+      const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, notify)
       const disconnectCodeMirror = connectCodeMirror(codeMirror, getText)
 
       doc = Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
-      updateDoc(doc)
+      updateCodeMirrors(doc)
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
       disconnectCodeMirror()
 
       doc = Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
-      updateDoc(doc)
+      updateCodeMirrors(doc)
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
     })
 
     it('handles document update before CodeMirror is connected', () => {
       const notify = () => undefined
-      const { connectCodeMirror, updateDoc } = connectAutomergeDoc(doc, notify)
+      const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, notify)
 
       doc = Automerge.change(doc, (proxy) => {
         proxy.text.insertAt!(0, 'World')
       })
-      updateDoc(doc)
+      updateCodeMirrors(doc)
 
       connectCodeMirror(codeMirror, getText)
 
@@ -76,7 +76,7 @@ describe('connectAutomergeDoc2', () => {
       doc = Automerge.change(doc, (proxy) => {
         proxy.text.insertAt!(0, 'Hello ')
       })
-      updateDoc(doc)
+      updateCodeMirrors(doc)
 
       assert.strictEqual(codeMirror.getValue(), 'Hello World')
     })

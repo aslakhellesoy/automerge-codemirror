@@ -95,10 +95,7 @@ describe('updateCodeMirrorDocs', () => {
       const codeMirror = CodeMirror(div)
       const mutex = new Mutex()
 
-      const now = Date.now()
       updateCodeMirrorDocs(initialDoc, doc, () => codeMirror, mutex)
-      const duration = Date.now() - now
-      console.log(duration)
       assert.deepStrictEqual(codeMirror.getValue(), doc.text.toString())
     })
   })
