@@ -17,13 +17,12 @@ interface Props {
   notify: Notify<Pad>
 }
 
-function usePeerDoc<D>(
-  initialDoc: D,
+function usePeerDoc<T>(
   sendMsg: (msg: Message) => void,
-  subscribe: (peer: Peer, setDoc: (newDoc: D) => void) => void
+  subscribe: (peer: Peer, setDoc: (newDoc: Automerge.Doc<T>) => void) => void
 ) {
   const peer = new Peer(sendMsg)
-  const state = useState(initialDoc)
+  const state = useState(Automerge.init<T>())
   const [, setDoc] = state
 
   useEffect(() => {
@@ -33,8 +32,8 @@ function usePeerDoc<D>(
   return state
 }
 
-const PadComponent: FunctionComponent<Props> = ({ initialDoc, sendMsg, subscribe, connectCodeMirror, notify }) => {
-  const [doc, setDoc] = usePeerDoc(initialDoc, sendMsg, subscribe)
+const PadComponent: FunctionComponent<Props> = ({ sendMsg, subscribe, connectCodeMirror, notify }) => {
+  const [doc, setDoc] = usePeerDoc(sendMsg, subscribe)
 
   function createSheet() {
     const newDoc = Automerge.change(doc, (proxy) => {
