@@ -1,39 +1,39 @@
 import Automerge from 'automerge'
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
-import useAutomergeDoc from '../../src/react/useAutomergeDoc'
-import { ConnectCodeMirror } from '../../src/types'
+import { ConnectCodeMirror, Notify } from '../../src/types'
 
 interface Pad {
   sheets: Automerge.Text[]
 }
 
 interface Props {
-  watchableDoc: Automerge.WatchableDoc<Pad>
+  initialDoc: Automerge.Doc<Pad>
   connectCodeMirror: ConnectCodeMirror<Pad>
+  notify: Notify<Pad>
 }
 
-const PadComponent: FunctionComponent<Props> = ({ watchableDoc, connectCodeMirror }) => {
-  const doc = useAutomergeDoc(watchableDoc)
+const PadComponent: FunctionComponent<Props> = ({ initialDoc, connectCodeMirror, notify }) => {
+  const [doc, setDoc] = useState(initialDoc)
 
   function createSheet() {
-    watchableDoc.set(
-      Automerge.change(watchableDoc.get(), (draft) => {
-        if (draft.sheets == undefined) draft.sheets = []
-        draft.sheets.push(new Automerge.Text())
-      })
-    )
+    const newDoc = Automerge.change(doc, (proxy) => {
+      if (proxy.sheets == undefined) proxy.sheets = []
+      proxy.sheets.push(new Automerge.Text())
+    })
+    setDoc(newDoc)
+    notify(newDoc)
   }
 
   function removeSheet() {
-    watchableDoc.set(
-      Automerge.change(watchableDoc.get(), (draft) => {
-        if (draft.sheets) {
-          draft.sheets.shift()
-        }
-      })
-    )
+    const newDoc = Automerge.change(doc, (proxy) => {
+      if (proxy.sheets) {
+        proxy.sheets.shift()
+      }
+    })
+    setDoc(newDoc)
+    notify(newDoc)
   }
 
   function makeCodeMirror(element: HTMLElement): CodeMirror.Editor {

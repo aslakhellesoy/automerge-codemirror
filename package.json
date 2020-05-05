@@ -40,6 +40,7 @@
     "babel-loader": "^8.0.6",
     "husky": "^4.2.3",
     "jsdom": "^16.2.2",
+    "manymerge": "^2.5.4",
     "mocha": "^7.1.1",
     "nyc": "^15.0.1",
     "prettier": "^2.0.4",

@@ -13,12 +13,12 @@ interface TestDoc {
 }
 
 describe('<AutomergeCodeMirror>', () => {
-  let watchableDoc: Automerge.WatchableDoc<TestDoc>
+  let doc: TestDoc
   const getText = (doc: TestDoc) => doc.text
   let host: HTMLElement
 
   beforeEach(() => {
-    watchableDoc = new Automerge.WatchableDoc(Automerge.from({ text: new Automerge.Text() }))
+    doc = Automerge.from({ text: new Automerge.Text() })
     host = document.body.appendChild(document.createElement('div'))
   })
 
@@ -28,23 +28,22 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const connectCodeMirror = connectAutomergeDoc(watchableDoc)
-    const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, watchableDoc, getText, host)
+    const { connectCodeMirror } = connectAutomergeDoc(doc, () => {})
+    const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, getText, host)
     codeMirror.setValue('hello')
-    assert.strictEqual(watchableDoc.get().text.toString(), 'hello')
+    assert.strictEqual(doc.text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const connectCodeMirror = connectAutomergeDoc(watchableDoc)
-    const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, watchableDoc, getText, host)
-    watchableDoc.set(Automerge.change(watchableDoc.get(), (draft) => draft.text.insertAt!(0, 'hello')))
+    const { connectCodeMirror } = connectAutomergeDoc(doc, () => {})
+    const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, getText, host)
+    doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
     assert.strictEqual(codeMirror.getValue(), 'hello')
   })
 })
 
 function makeCodeMirror(
   connectCodeMirror: ConnectCodeMirror<TestDoc>,
-  watchableDoc: Automerge.WatchableDoc<TestDoc>,
   getText: GetText<TestDoc>,
   host: HTMLElement
 ): Promise<CodeMirror.Editor> {
