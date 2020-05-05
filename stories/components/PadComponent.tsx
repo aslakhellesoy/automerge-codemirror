@@ -3,7 +3,9 @@ import React, { FunctionComponent, useEffect, useState } from 'react'
 import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
 import { ConnectCodeMirror, Notify } from '../../src/types'
-import { Message, Peer } from 'manymerge'
+import { Message } from 'manymerge'
+import PeerDoc from '../../src/manymerge/PeerDoc'
+import connectAutomergeDoc from '../../src/connectAutomergeDoc'
 
 interface Pad {
   sheets: Automerge.Text[]
@@ -12,28 +14,28 @@ interface Pad {
 interface Props {
   initialDoc: Automerge.Doc<Pad>
   sendMsg: (msg: Message) => void
-  subscribe: (peer: Peer, setDoc: (newDoc: Automerge.Doc<Pad>) => void) => void
-  connectCodeMirror: ConnectCodeMirror<Pad>
+  subscribe: (peer: PeerDoc<Pad>, setDoc: (newDoc: Automerge.Doc<Pad>) => void) => void
   notify: Notify<Pad>
 }
 
 function usePeerDoc<T>(
   sendMsg: (msg: Message) => void,
-  subscribe: (peer: Peer, setDoc: (newDoc: Automerge.Doc<T>) => void) => void
+  subscribe: (peerDoc: PeerDoc<T>, setDoc: (newDoc: Automerge.Doc<T>) => void) => void
 ) {
-  const peer = new Peer(sendMsg)
+  const peerDoc = new PeerDoc<T>(sendMsg)
   const state = useState(Automerge.init<T>())
   const [, setDoc] = state
 
   useEffect(() => {
-    subscribe(peer, setDoc)
+    subscribe(peerDoc, setDoc)
   }, [])
 
   return state
 }
 
-const PadComponent: FunctionComponent<Props> = ({ sendMsg, subscribe, connectCodeMirror, notify }) => {
-  const [doc, setDoc] = usePeerDoc(sendMsg, subscribe)
+const PadComponent: FunctionComponent<Props> = ({ sendMsg, subscribe, notify }) => {
+  //const [doc, setDoc] = usePeerDoc(sendMsg, subscribe)
+  const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, notify)
 
   function createSheet() {
     const newDoc = Automerge.change(doc, (proxy) => {

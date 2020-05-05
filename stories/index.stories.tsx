@@ -1,5 +1,4 @@
 import { storiesOf } from '@storybook/react'
-import Automerge from 'automerge'
 import React from 'react'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
@@ -7,23 +6,8 @@ import 'codemirror/theme/material.css'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 
-import { Message, Peer } from 'manymerge'
-
-class PeerDoc<T> {
-  private readonly peer: Peer
-  private doc = Automerge.init<T>()
-
-  constructor(sendMsg: (msg: Message) => void) {
-    this.peer = new Peer(sendMsg)
-  }
-
-  applyMessage(msg: Message) {
-    const newDoc = this.peer.applyMessage(msg, this.doc)
-    if (newDoc) {
-      this.doc = newDoc
-    }
-  }
-}
+import { Message } from 'manymerge'
+import PeerDoc from '../src/manymerge/PeerDoc'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
   let wilmasPeerDoc: PeerDoc<Pad> | undefined
@@ -59,8 +43,7 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
           <h3>Wilma</h3>
           <PadComponent
             sendMsg={sendMsgWilma}
-            subscribe={(peer, setDoc) => (wilmasPeerDoc = peer)}
-            connectCodeMirror={connectCodeMirrorWilma}
+            subscribe={(peerDoc, setDoc) => (wilmasPeerDoc = peerDoc)}
             notify={notifyWilma}
           />
         </div>
