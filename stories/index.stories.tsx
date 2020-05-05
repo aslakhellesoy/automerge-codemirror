@@ -7,7 +7,7 @@ import Automerge from 'automerge'
 import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 
-import { Peer } from 'manymerge'
+import { Message, Peer } from 'manymerge'
 import connectAutomergeDoc from '../src/connectAutomergeDoc'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
@@ -19,32 +19,32 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
   let peerFred: Peer
   let peerBarney: Peer
 
-  peerWilma = new Peer((msg) => {
+  const sendMsgToFred = (msg: Message) => {
     const newDoc = peerFred.applyMessage(msg, docFred)
 
     if (newDoc) {
       updateCodeMirrorsFred(newDoc)
       setDocFred(newDoc)
     }
-  })
+  }
 
-  peerFred = new Peer((msg) => {
+  const sendMsgToBarney = (msg: Message) => {
     const newDoc = peerBarney.applyMessage(msg, docBarney)
 
     if (newDoc) {
       updateCodeMirrorsBarney(newDoc)
       setDocBarney(newDoc)
     }
-  })
+  }
 
-  peerBarney = new Peer((msg) => {
+  const sendMsgToWilma = (msg: Message) => {
     const newDoc = peerWilma.applyMessage(msg, docWilma)
 
     if (newDoc) {
       updateCodeMirrorsWilma(newDoc)
       setDocWilma(newDoc)
     }
-  })
+  }
 
   const notifyWilma = peerWilma.notify.bind(peerWilma)
   const notifyFred = peerFred.notify.bind(peerFred)
@@ -80,15 +80,30 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
       <div className="pads">
         <div>
           <h3>Wilma</h3>
-          <PadComponent doc={docWilma} connectCodeMirror={connectCodeMirrorWilma} notify={notifyWilma} />
+          <PadComponent
+            initialDoc={docWilma}
+            sendMsg={sendMsgToFred}
+            connectCodeMirror={connectCodeMirrorWilma}
+            notify={notifyWilma}
+          />
         </div>
         <div>
           <h3>Fred</h3>
-          <PadComponent doc={docFred} connectCodeMirror={connectCodeMirrorFred} notify={notifyFred} />
+          <PadComponent
+            initialDoc={docFred}
+            sendMsg={sendMsgToBarney}
+            connectCodeMirror={connectCodeMirrorFred}
+            notify={notifyFred}
+          />
         </div>
         <div>
           <h3>Barney</h3>
-          <PadComponent doc={docBarney} connectCodeMirror={connectCodeMirrorBarney} notify={notifyBarney} />
+          <PadComponent
+            initialDoc={docBarney}
+            sendMsg={sendMsgToWilma}
+            connectCodeMirror={connectCodeMirrorBarney}
+            notify={notifyBarney}
+          />
         </div>
       </div>
     </div>
