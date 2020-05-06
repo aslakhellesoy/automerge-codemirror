@@ -44,7 +44,7 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
           return (
             <div key={peerId}>
               <h3>{peerId}</h3>
-              <PadComponent peerDoc={peerDoc} automergeCodeMirror={new AutomergeCodeMirror<Pad>(notify)} />
+              <PadComponent peerDoc={peerDoc} automergeCodeMirror={new AutomergeCodeMirror<Pad>(peerDoc.doc, notify)} />
             </div>
           )
         })}

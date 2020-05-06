@@ -14,8 +14,11 @@ import updateAutomergeDoc from './updateAutomergeDoc'
 export default class AutomergeCodeMirror<D> {
   private readonly mutex: Mutex = new Mutex()
   private readonly codeMirrorByTextId = new Map<Automerge.UUID, CodeMirror.Editor>()
+  private doc: D
 
-  constructor(private readonly notify: Notify<D>) {}
+  constructor(initialDoc: D, private readonly notify: Notify<D>) {
+    this.doc = initialDoc
+  }
 
   getCodeMirror(textObjectId: Automerge.UUID): CodeMirror.Editor | undefined {
     const editor = this.codeMirrorByTextId.get(textObjectId)
@@ -29,14 +32,13 @@ export default class AutomergeCodeMirror<D> {
   /**
    * Connects a CodeMirror instance to an Automerge.Text object.
    *
-   * @param doc - the Automerge document that will be connected to CodeMirror instances
    * @param codeMirror the editor instance
    * @param getText a function that looks up the Automerge.Text object to connect the CodeMirror editor to
    */
-  connectCodeMirror(doc: D, codeMirror: CodeMirror.Editor, getText: GetText<D>) {
-    const text = getText(doc)
+  connectCodeMirror(codeMirror: CodeMirror.Editor, getText: GetText<D>) {
+    const text = getText(this.doc)
     if (!text) {
-      throw new Error(`Cannot connect CodeMirror. Did not find text in ${JSON.stringify(doc)}`)
+      throw new Error(`Cannot connect CodeMirror. Did not find text in ${JSON.stringify(this.doc)}`)
     }
     // Establish the association between the Automerge.Text objectId and the CodeMirror instance.
     // This association is used during the processing of diffs between two Automerge document changes,
@@ -45,13 +47,13 @@ export default class AutomergeCodeMirror<D> {
 
     this.codeMirrorByTextId.set(textId, codeMirror)
 
-    codeMirror.setValue(getText(doc).toString())
+    codeMirror.setValue(getText(this.doc).toString())
 
     const codeMirrorChangeHandler = (editor: CodeMirror.Editor, change: CodeMirror.EditorChange) => {
       if (change.origin !== 'automerge') {
         this.mutex.lock()
-        doc = updateAutomergeDoc(doc, getText, editor.getDoc(), change)
-        this.notify(doc)
+        this.doc = updateAutomergeDoc(this.doc, getText, editor.getDoc(), change)
+        this.notify(this.doc)
         this.mutex.release()
       }
     }
@@ -66,7 +68,7 @@ export default class AutomergeCodeMirror<D> {
     return disconnectCodeMirror
   }
 
-  updateCodeMirrors(oldDoc: D, newDoc: D): D {
-    return updateCodeMirrorDocs(oldDoc, newDoc, this.getCodeMirror.bind(this), this.mutex)
+  updateCodeMirrors(newDoc: D): D {
+    return updateCodeMirrorDocs(this.doc, newDoc, this.getCodeMirror.bind(this), this.mutex)
   }
 }

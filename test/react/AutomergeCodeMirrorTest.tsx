@@ -28,21 +28,18 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>((newDoc) => (doc = newDoc))
+    const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, (newDoc) => (doc = newDoc))
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, automergeCodeMirror, getText, host)
     codeMirror.setValue('hello')
     assert.strictEqual(doc.text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(() => {
+    const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, () => {
       throw new Error('Unexpected')
     })
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, automergeCodeMirror, getText, host)
-    doc = automergeCodeMirror.updateCodeMirrors(
-      doc,
-      Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
-    )
+    doc = automergeCodeMirror.updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello')))
     assert.strictEqual(codeMirror.getValue(), 'hello')
   })
 })
@@ -62,7 +59,6 @@ function makeCodeMirror(
 
     render(
       <AutomergeCodeMirrorComponent
-        doc={doc}
         makeCodeMirror={makeCodeMirror}
         automergeCodeMirror={automergeCodeMirror}
         getText={getText}
