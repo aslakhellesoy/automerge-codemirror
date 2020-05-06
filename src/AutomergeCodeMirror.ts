@@ -68,7 +68,8 @@ export default class AutomergeCodeMirror<D> {
     return disconnectCodeMirror
   }
 
-  updateCodeMirrors(newDoc: D): D {
-    return updateCodeMirrorDocs(this.doc, newDoc, this.getCodeMirror.bind(this), this.mutex)
+  updateCodeMirrors(oldDoc: D, newDoc: D): D {
+    this.doc = newDoc
+    return updateCodeMirrorDocs(oldDoc, newDoc, this.getCodeMirror.bind(this), this.mutex)
   }
 }

@@ -30,11 +30,17 @@ describe('AutomerCodeMirror', () => {
       const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, notify)
       const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(codeMirror, getText)
 
-      doc = automergeCodeMirror.updateCodeMirrors(Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello')))
+      doc = automergeCodeMirror.updateCodeMirrors(
+        doc,
+        Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
+      )
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
 
-      doc = automergeCodeMirror.updateCodeMirrors(Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world')))
+      doc = automergeCodeMirror.updateCodeMirrors(
+        doc,
+        Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
+      )
 
       assert.strictEqual(codeMirror.getValue(), 'worldhello')
 
@@ -46,12 +52,18 @@ describe('AutomerCodeMirror', () => {
       const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, notify)
       const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(codeMirror, getText)
 
-      doc = automergeCodeMirror.updateCodeMirrors(Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello')))
+      doc = automergeCodeMirror.updateCodeMirrors(
+        doc,
+        Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
+      )
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
       disconnectCodeMirror()
 
-      doc = automergeCodeMirror.updateCodeMirrors(Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world')))
+      doc = automergeCodeMirror.updateCodeMirrors(
+        doc,
+        Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
+      )
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
     })
@@ -61,6 +73,7 @@ describe('AutomerCodeMirror', () => {
       const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, notify)
 
       doc = automergeCodeMirror.updateCodeMirrors(
+        doc,
         Automerge.change(doc, (proxy) => {
           proxy.text.insertAt!(0, 'World')
         })
@@ -71,6 +84,7 @@ describe('AutomerCodeMirror', () => {
       assert.strictEqual(codeMirror.getValue(), 'World')
 
       doc = automergeCodeMirror.updateCodeMirrors(
+        doc,
         Automerge.change(doc, (proxy) => {
           proxy.text.insertAt!(0, 'Hello ')
         })

@@ -20,7 +20,7 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
   useEffect(() => {
     return peerDoc.subscribe((oldDoc, newDoc) => {
       setDoc(newDoc)
-      automergeCodeMirror.updateCodeMirrors(newDoc)
+      automergeCodeMirror.updateCodeMirrors(oldDoc, newDoc)
     })
   }, [])
 
@@ -59,7 +59,6 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
       <button onClick={removeSheet}>Remove Sheet</button>
       {(doc.sheets || []).map((_, i) => {
         function getText(doc: Pad | Automerge.Proxy<Pad>) {
-          console.log('--- getText', doc.sheets[i])
           return doc.sheets[i]
         }
         return (

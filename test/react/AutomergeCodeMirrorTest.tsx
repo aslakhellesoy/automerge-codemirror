@@ -39,7 +39,10 @@ describe('<AutomergeCodeMirror>', () => {
       throw new Error('Unexpected')
     })
     const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, automergeCodeMirror, getText, host)
-    doc = automergeCodeMirror.updateCodeMirrors(Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello')))
+    doc = automergeCodeMirror.updateCodeMirrors(
+      doc,
+      Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
+    )
     assert.strictEqual(codeMirror.getValue(), 'hello')
   })
 })
