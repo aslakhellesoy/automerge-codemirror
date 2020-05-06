@@ -15,9 +15,9 @@ export default function updateCodeMirrorDocs<D>(
   newDoc: D,
   getCodeMirror: (textObjectId: Automerge.UUID) => CodeMirror.Editor | undefined,
   mutex: Mutex
-): void {
+): D {
   if (mutex.locked || !oldDoc) {
-    return
+    return newDoc
   }
   const diffs = Automerge.diff(oldDoc, newDoc)
 
@@ -41,4 +41,5 @@ export default function updateCodeMirrorDocs<D>(
       }
     }
   }
+  return newDoc
 }

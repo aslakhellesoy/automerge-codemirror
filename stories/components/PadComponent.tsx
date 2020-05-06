@@ -10,24 +10,30 @@ interface Pad {
 }
 
 interface Props {
+  peerId: string
   peerDoc: PeerDoc<Pad>
 }
 
-const PadComponent: FunctionComponent<Props> = ({ peerDoc }) => {
+const PadComponent: FunctionComponent<Props> = ({ peerId, peerDoc }) => {
   const [doc, setDoc] = useState(peerDoc.doc)
-  const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, (newDoc) => peerDoc.notify(newDoc))
+  const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc<Pad>((newDoc) => {
+    console.log('NEW DOC', peerId, newDoc.sheets[0].toString())
+    setDoc(newDoc)
+    peerDoc.notify(newDoc)
+  })
 
   useEffect(() => {
     return peerDoc.subscribe((newDoc) => {
+      console.log('delivery!', peerId)
       setDoc(newDoc)
-      updateCodeMirrors(newDoc)
+      updateCodeMirrors(doc, newDoc)
     })
   }, [])
 
   function createSheet() {
     const newDoc = Automerge.change(doc, (proxy) => {
       if (proxy.sheets == undefined) proxy.sheets = []
-      proxy.sheets.push(new Automerge.Text())
+      proxy.sheets.push(new Automerge.Text(String(proxy.sheets.length)))
     })
     setDoc(newDoc)
     peerDoc.notify(newDoc)
@@ -64,6 +70,7 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc }) => {
         return (
           <div key={i} className="sheet">
             <AutomergeCodeMirror<Pad>
+              doc={doc}
               makeCodeMirror={makeCodeMirror}
               connectCodeMirror={connectCodeMirror}
               getText={getText}

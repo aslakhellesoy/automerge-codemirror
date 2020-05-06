@@ -8,28 +8,32 @@ import updateAutomergeDoc from './updateAutomergeDoc'
 /**
  * Connect an Automerge document
  *
- * @param doc - the Automerge document that will be connected to CodeMirror instances
  * @param notify - a callback that gets called when the doc is updated as the result of an editor change
  * @return ConnectCodeMirror - a function for connecting an Automerge.Text object in the document to a CodeMirror instance
  */
 export default function connectAutomergeDoc<D>(
-  doc: D,
   notify: Notify<D>
 ): { connectCodeMirror: ConnectCodeMirror<D>; updateCodeMirrors: UpdateCodemirrors<D> } {
   const mutex = new Mutex()
   const codeMirrorByTextId = new Map<Automerge.UUID, CodeMirror.Editor>()
 
   function getCodeMirror(textObjectId: Automerge.UUID): CodeMirror.Editor | undefined {
-    return codeMirrorByTextId.get(textObjectId)
+    const editor = codeMirrorByTextId.get(textObjectId)
+    if (!editor) {
+      console.log(`Nothing for ${textObjectId}, but I had ${Array.from(codeMirrorByTextId.keys())}`)
+    }
+
+    return editor
   }
 
   /**
    * Connects a CodeMirror instance to an Automerge.Text object.
    *
+   * @param doc - the Automerge document that will be connected to CodeMirror instances
    * @param codeMirror the editor instance
    * @param getText a function that looks up the Automerge.Text object to connect the CodeMirror editor to
    */
-  function connectCodeMirror(codeMirror: CodeMirror.Editor, getText: GetText<D>) {
+  function connectCodeMirror(doc: D, codeMirror: CodeMirror.Editor, getText: GetText<D>) {
     const text = getText(doc)
     if (!text) {
       throw new Error(`Cannot connect CodeMirror. Did not find text in ${JSON.stringify(doc)}`)
@@ -37,7 +41,9 @@ export default function connectAutomergeDoc<D>(
     // Establish the association between the Automerge.Text objectId and the CodeMirror instance.
     // This association is used during the processing of diffs between two Automerge document changes,
     // so the right CodeMirror instance can be found for each Automerge.Text change.
-    codeMirrorByTextId.set(Automerge.getObjectId(text), codeMirror)
+    const textId = Automerge.getObjectId(text)
+    console.log('Storing', textId)
+    codeMirrorByTextId.set(textId, codeMirror)
 
     codeMirror.setValue(getText(doc).toString())
 
@@ -54,15 +60,14 @@ export default function connectAutomergeDoc<D>(
 
     function disconnectCodeMirror() {
       codeMirror.off('change', codeMirrorChangeHandler)
-      codeMirrorByTextId.delete(Automerge.getObjectId(text))
+      codeMirrorByTextId.delete(textId)
     }
 
     return disconnectCodeMirror
   }
 
-  function updateCodeMirrors(newDoc: D) {
-    updateCodeMirrorDocs(doc, newDoc, getCodeMirror, mutex)
-    doc = newDoc
+  function updateCodeMirrors(oldDoc: D, newDoc: D) {
+    return updateCodeMirrorDocs(oldDoc, newDoc, getCodeMirror, mutex)
   }
 
   return { connectCodeMirror, updateCodeMirrors }

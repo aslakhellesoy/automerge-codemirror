@@ -13,7 +13,7 @@ interface TestDoc {
 }
 
 describe('<AutomergeCodeMirror>', () => {
-  let doc: TestDoc
+  let doc: Automerge.Doc<TestDoc>
   const getText = (doc: TestDoc) => doc.text
   let host: HTMLElement
 
@@ -28,24 +28,27 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const { connectCodeMirror } = connectAutomergeDoc(doc, (newDoc) => (doc = newDoc))
-    const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, getText, host)
+    const { connectCodeMirror } = connectAutomergeDoc<Automerge.Doc<TestDoc>>((newDoc) => (doc = newDoc))
+    const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, connectCodeMirror, getText, host)
     codeMirror.setValue('hello')
     assert.strictEqual(doc.text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc(doc, () => {
+    const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc<Automerge.Doc<TestDoc>>(() => {
       throw new Error('Unexpected')
     })
-    const codeMirror: CodeMirror.Editor = await makeCodeMirror(connectCodeMirror, getText, host)
-    doc = Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
-    updateCodeMirrors(doc)
+    const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, connectCodeMirror, getText, host)
+    doc = updateCodeMirrors(
+      doc,
+      Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
+    )
     assert.strictEqual(codeMirror.getValue(), 'hello')
   })
 })
 
 function makeCodeMirror(
+  doc: Automerge.Doc<TestDoc>,
   connectCodeMirror: ConnectCodeMirror<TestDoc>,
   getText: GetText<TestDoc>,
   host: HTMLElement
@@ -58,7 +61,12 @@ function makeCodeMirror(
     }
 
     render(
-      <AutomergeCodeMirror makeCodeMirror={makeCodeMirror} connectCodeMirror={connectCodeMirror} getText={getText} />,
+      <AutomergeCodeMirror
+        doc={doc}
+        makeCodeMirror={makeCodeMirror}
+        connectCodeMirror={connectCodeMirror}
+        getText={getText}
+      />,
       host
     )
   })

@@ -7,15 +7,24 @@ import './style.css'
 import { Pad, PadComponent } from './components/PadComponent'
 
 import PeerDoc from '../src/manymerge/PeerDoc'
+import HubDoc from '../src/manymerge/HubDoc'
+import { Message } from 'manymerge'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
-  let wilmasPeerDoc: PeerDoc<Pad>
-  let fredsPeerDoc: PeerDoc<Pad>
-  let barneysPeerDoc: PeerDoc<Pad>
+  const peerDocById = new Map<string, PeerDoc<Pad>>()
 
-  wilmasPeerDoc = new PeerDoc<Pad>((msg) => fredsPeerDoc.applyMessage(msg))
-  fredsPeerDoc = new PeerDoc<Pad>((msg) => barneysPeerDoc.applyMessage(msg))
-  barneysPeerDoc = new PeerDoc<Pad>((msg) => wilmasPeerDoc.applyMessage(msg))
+  const hubDoc = new HubDoc<Pad>(
+    (peerId: string, msg: Message) => peerDocById.get(peerId)!.applyMessage(msg),
+    (msg: Message) => Array.from(peerDocById.values()).forEach((peerDoc) => peerDoc.applyMessage(msg))
+  )
+
+  const peerIds = ['Wilma', 'Fred', 'Barney']
+  for (const peerId of peerIds) {
+    peerDocById.set(
+      peerId,
+      new PeerDoc<Pad>((msg) => hubDoc.applyMessage(peerId, msg))
+    )
+  }
 
   return (
     <div>
@@ -24,26 +33,16 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
         CodeMirror editor.
       </p>
       <p>
-        Wilma and Fred's pads are connected. Fred and Barney's pads are also connected. When either of them creates a
-        new pad or edits a sheet in a pad, changes are reflected in the other's pads and sheets.
-      </p>
-      <p>
-        The source code is{' '}
+        The source code is at
         <a href="https://github.com/aslakhellesoy/automerge-codemirror/blob/master/stories/index.stories.tsx">here</a>.
       </p>
       <div className="pads">
-        <div>
-          <h3>Wilma</h3>
-          <PadComponent peerDoc={wilmasPeerDoc} />
-        </div>
-        <div>
-          <h3>Fred</h3>
-          <PadComponent peerDoc={fredsPeerDoc} />
-        </div>
-        <div>
-          <h3>Barney</h3>
-          <PadComponent peerDoc={barneysPeerDoc} />
-        </div>
+        {peerIds.map((peerId) => (
+          <div key={peerId}>
+            <h3>Wilma</h3>
+            <PadComponent peerId={peerId} peerDoc={peerDocById.get(peerId)!} />
+          </div>
+        ))}
       </div>
     </div>
   )
