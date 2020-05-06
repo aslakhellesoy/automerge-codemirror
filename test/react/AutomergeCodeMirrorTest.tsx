@@ -6,7 +6,7 @@ import AutomergeCodeMirrorComponent from '../../src/react/AutomergeCodeMirrorCom
 import React from 'react'
 import assert from 'assert'
 import AutomergeCodeMirror from '../../src/AutomergeCodeMirror'
-import { ConnectCodeMirror, GetText } from '../../src/types'
+import { GetText } from '../../src/types'
 
 interface TestDoc {
   text: Automerge.Text
@@ -28,18 +28,18 @@ describe('<AutomergeCodeMirror>', () => {
   })
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
-    const { connectCodeMirror } = AutomergeCodeMirror<Automerge.Doc<TestDoc>>((newDoc) => (doc = newDoc))
-    const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, connectCodeMirror, getText, host)
+    const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>((newDoc) => (doc = newDoc))
+    const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, automergeCodeMirror, getText, host)
     codeMirror.setValue('hello')
     assert.strictEqual(doc.text.toString(), 'hello')
   })
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
-    const { connectCodeMirror, updateCodeMirrors } = AutomergeCodeMirror<Automerge.Doc<TestDoc>>(() => {
+    const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(() => {
       throw new Error('Unexpected')
     })
-    const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, connectCodeMirror, getText, host)
-    doc = updateCodeMirrors(
+    const codeMirror: CodeMirror.Editor = await makeCodeMirror(doc, automergeCodeMirror, getText, host)
+    doc = automergeCodeMirror.updateCodeMirrors(
       doc,
       Automerge.change(doc, (draft) => draft.text.insertAt!(0, 'hello'))
     )
@@ -49,7 +49,7 @@ describe('<AutomergeCodeMirror>', () => {
 
 function makeCodeMirror(
   doc: Automerge.Doc<TestDoc>,
-  connectCodeMirror: ConnectCodeMirror<TestDoc>,
+  automergeCodeMirror: AutomergeCodeMirror<TestDoc>,
   getText: GetText<TestDoc>,
   host: HTMLElement
 ): Promise<CodeMirror.Editor> {
@@ -61,10 +61,10 @@ function makeCodeMirror(
     }
 
     render(
-      <AutomergeCodeMirror
+      <AutomergeCodeMirrorComponent
         doc={doc}
         makeCodeMirror={makeCodeMirror}
-        connectCodeMirror={connectCodeMirror}
+        automergeCodeMirror={automergeCodeMirror}
         getText={getText}
       />,
       host
