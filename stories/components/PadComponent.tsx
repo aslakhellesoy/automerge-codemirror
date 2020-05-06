@@ -18,9 +18,9 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
   const [doc, setDoc] = useState(peerDoc.doc)
 
   useEffect(() => {
-    return peerDoc.subscribe((newDoc) => {
+    return peerDoc.subscribe((oldDoc, newDoc) => {
       setDoc(newDoc)
-      automergeCodeMirror.updateCodeMirrors(doc, newDoc)
+      automergeCodeMirror.updateCodeMirrors(oldDoc, newDoc)
     })
   }, [])
 

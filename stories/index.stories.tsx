@@ -43,7 +43,7 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
           const notify = peerDoc.notify.bind(peerDoc)
           return (
             <div key={peerId}>
-              <h3>Wilma</h3>
+              <h3>{peerId}</h3>
               <PadComponent peerDoc={peerDoc} automergeCodeMirror={new AutomergeCodeMirror<Pad>(notify)} />
             </div>
           )

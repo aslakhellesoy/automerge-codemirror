@@ -1,7 +1,7 @@
 import { Message, Peer } from 'manymerge'
 import Automerge from 'automerge'
 
-type Handler<T> = (newDoc: Automerge.Doc<T>) => void
+type Handler<T> = (oldDoc: Automerge.Doc<T>, newDoc: Automerge.Doc<T>) => void
 
 export default class PeerDoc<T> {
   private readonly handlers = new Set<Handler<T>>()
@@ -17,11 +17,12 @@ export default class PeerDoc<T> {
   }
 
   applyMessage(msg: Message) {
-    const newDoc = this.peer.applyMessage(msg, this._doc)
+    const oldDoc = this._doc
+    const newDoc = this.peer.applyMessage(msg, oldDoc)
     if (newDoc) {
       this._doc = newDoc
       for (const handler of this.handlers) {
-        handler(newDoc)
+        handler(oldDoc, newDoc)
       }
     }
   }
