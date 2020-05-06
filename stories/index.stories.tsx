@@ -9,6 +9,7 @@ import { Pad, PadComponent } from './components/PadComponent'
 import PeerDoc from '../src/manymerge/PeerDoc'
 import HubDoc from '../src/manymerge/HubDoc'
 import { Message } from 'manymerge'
+import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
   const peerDocById = new Map<string, PeerDoc<Pad>>()
@@ -37,12 +38,16 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
         <a href="https://github.com/aslakhellesoy/automerge-codemirror/blob/master/stories/index.stories.tsx">here</a>.
       </p>
       <div className="pads">
-        {peerIds.map((peerId) => (
-          <div key={peerId}>
-            <h3>Wilma</h3>
-            <PadComponent peerId={peerId} peerDoc={peerDocById.get(peerId)!} />
-          </div>
-        ))}
+        {peerIds.map((peerId) => {
+          const peerDoc = peerDocById.get(peerId)!
+          const notify = peerDoc.notify.bind(peerDoc)
+          return (
+            <div key={peerId}>
+              <h3>Wilma</h3>
+              <PadComponent peerDoc={peerDoc} automergeCodeMirror={new AutomergeCodeMirror<Pad>(notify)} />
+            </div>
+          )
+        })}
       </div>
     </div>
   )

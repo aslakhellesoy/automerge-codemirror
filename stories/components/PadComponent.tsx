@@ -1,32 +1,26 @@
 import Automerge from 'automerge'
 import React, { FunctionComponent, useEffect, useState } from 'react'
-import AutomergeCodeMirror from '../../src/react/AutomergeCodeMirror'
 import CodeMirror from 'codemirror'
 import PeerDoc from '../../src/manymerge/PeerDoc'
-import connectAutomergeDoc from '../../src/connectAutomergeDoc'
+import AutomergeCodeMirror from '../../src/AutomergeCodeMirror'
+import AutomergeCodeMirrorComponent from '../../src/react/AutomergeCodeMirrorComponent'
 
 interface Pad {
   sheets: Automerge.Text[]
 }
 
 interface Props {
-  peerId: string
   peerDoc: PeerDoc<Pad>
+  automergeCodeMirror: AutomergeCodeMirror<Pad>
 }
 
-const PadComponent: FunctionComponent<Props> = ({ peerId, peerDoc }) => {
+const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }) => {
   const [doc, setDoc] = useState(peerDoc.doc)
-  const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc<Pad>((newDoc) => {
-    console.log('NEW DOC', peerId, newDoc.sheets[0].toString())
-    setDoc(newDoc)
-    peerDoc.notify(newDoc)
-  })
 
   useEffect(() => {
     return peerDoc.subscribe((newDoc) => {
-      console.log('delivery!', peerId)
       setDoc(newDoc)
-      updateCodeMirrors(doc, newDoc)
+      automergeCodeMirror.updateCodeMirrors(doc, newDoc)
     })
   }, [])
 
@@ -69,10 +63,10 @@ const PadComponent: FunctionComponent<Props> = ({ peerId, peerDoc }) => {
         }
         return (
           <div key={i} className="sheet">
-            <AutomergeCodeMirror<Pad>
+            <AutomergeCodeMirrorComponent<Pad>
               doc={doc}
               makeCodeMirror={makeCodeMirror}
-              connectCodeMirror={connectCodeMirror}
+              automergeCodeMirror={automergeCodeMirror}
               getText={getText}
             />
           </div>

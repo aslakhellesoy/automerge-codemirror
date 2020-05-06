@@ -2,13 +2,13 @@ import assert from 'assert'
 import './codeMirrorEnv'
 import Automerge from 'automerge'
 import CodeMirror from 'codemirror'
-import connectAutomergeDoc from '../src/connectAutomergeDoc'
+import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
 
 interface TestDoc {
   text: Automerge.Text
 }
 
-describe('connectAutomergeDoc2', () => {
+describe('AutomerCodeMirror', () => {
   let doc: Automerge.Doc<TestDoc>
   const getText = (testDoc: TestDoc) => testDoc.text
   let host: HTMLElement
@@ -27,17 +27,17 @@ describe('connectAutomergeDoc2', () => {
   describe('Automerge => CodeMirror', () => {
     it('handles 2 consecutive Automerge changes', () => {
       const notify = () => undefined
-      const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc<Automerge.Doc<TestDoc>>(notify)
-      const disconnectCodeMirror = connectCodeMirror(doc, codeMirror, getText)
+      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(notify)
+      const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
-      doc = updateCodeMirrors(
+      doc = automergeCodeMirror.updateCodeMirrors(
         doc,
         Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
       )
 
       assert.strictEqual(codeMirror.getValue(), 'hello')
 
-      doc = updateCodeMirrors(
+      doc = automergeCodeMirror.updateCodeMirrors(
         doc,
         Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
       )
@@ -49,10 +49,10 @@ describe('connectAutomergeDoc2', () => {
 
     it('ignores Automerge changes after disconnection', () => {
       const notify = () => undefined
-      const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc<Automerge.Doc<TestDoc>>(notify)
-      const disconnectCodeMirror = connectCodeMirror(doc, codeMirror, getText)
+      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(notify)
+      const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
-      doc = updateCodeMirrors(
+      doc = automergeCodeMirror.updateCodeMirrors(
         doc,
         Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'hello'))
       )
@@ -60,7 +60,7 @@ describe('connectAutomergeDoc2', () => {
       assert.strictEqual(codeMirror.getValue(), 'hello')
       disconnectCodeMirror()
 
-      doc = updateCodeMirrors(
+      doc = automergeCodeMirror.updateCodeMirrors(
         doc,
         Automerge.change(doc, (proxy) => proxy.text.insertAt!(0, 'world'))
       )
@@ -70,20 +70,20 @@ describe('connectAutomergeDoc2', () => {
 
     it('handles document update before CodeMirror is connected', () => {
       const notify = () => undefined
-      const { connectCodeMirror, updateCodeMirrors } = connectAutomergeDoc<Automerge.Doc<TestDoc>>(notify)
+      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(notify)
 
-      doc = updateCodeMirrors(
+      doc = automergeCodeMirror.updateCodeMirrors(
         doc,
         Automerge.change(doc, (proxy) => {
           proxy.text.insertAt!(0, 'World')
         })
       )
 
-      connectCodeMirror(doc, codeMirror, getText)
+      automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
       assert.strictEqual(codeMirror.getValue(), 'World')
 
-      doc = updateCodeMirrors(
+      doc = automergeCodeMirror.updateCodeMirrors(
         doc,
         Automerge.change(doc, (proxy) => {
           proxy.text.insertAt!(0, 'Hello ')
@@ -96,8 +96,8 @@ describe('connectAutomergeDoc2', () => {
 
   describe('CodeMirror => Automerge', () => {
     it('handles 2 consecutive CodeMirror changes', () => {
-      const { connectCodeMirror } = connectAutomergeDoc<TestDoc>((newDoc) => (doc = newDoc))
-      connectCodeMirror(doc, codeMirror, getText)
+      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>((newDoc) => (doc = newDoc))
+      automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
       codeMirror.replaceRange('hello', codeMirror.posFromIndex(0))
       assert.strictEqual(codeMirror.getValue(), 'hello')
