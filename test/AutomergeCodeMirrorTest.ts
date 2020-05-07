@@ -3,6 +3,7 @@ import './codeMirrorEnv'
 import Automerge from 'automerge'
 import CodeMirror from 'codemirror'
 import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
+import { Change } from '../src/types'
 
 interface TestDoc {
   text: Automerge.Text
@@ -10,6 +11,7 @@ interface TestDoc {
 
 describe('AutomerCodeMirror', () => {
   let doc: Automerge.Doc<TestDoc>
+  let change: Change<Automerge.Doc<TestDoc>> = (changeFn) => (doc = Automerge.change(doc, changeFn))
   const getText = (testDoc: TestDoc) => testDoc.text
   let host: HTMLElement
   let codeMirror: CodeMirror.Editor
@@ -26,9 +28,8 @@ describe('AutomerCodeMirror', () => {
 
   describe('Automerge => CodeMirror', () => {
     it('handles 2 consecutive Automerge changes', () => {
-      const notify = () => undefined
-      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, notify)
-      const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(codeMirror, getText)
+      const automergeCodeMirror = new AutomergeCodeMirror(change)
+      const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
       doc = automergeCodeMirror.updateCodeMirrors(
         doc,
@@ -48,9 +49,8 @@ describe('AutomerCodeMirror', () => {
     })
 
     it('ignores Automerge changes after disconnection', () => {
-      const notify = () => undefined
-      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, notify)
-      const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(codeMirror, getText)
+      const automergeCodeMirror = new AutomergeCodeMirror(change)
+      const disconnectCodeMirror = automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
       doc = automergeCodeMirror.updateCodeMirrors(
         doc,
@@ -69,8 +69,7 @@ describe('AutomerCodeMirror', () => {
     })
 
     it('handles document update before CodeMirror is connected', () => {
-      const notify = () => undefined
-      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, notify)
+      const automergeCodeMirror = new AutomergeCodeMirror(change)
 
       doc = automergeCodeMirror.updateCodeMirrors(
         doc,
@@ -79,7 +78,7 @@ describe('AutomerCodeMirror', () => {
         })
       )
 
-      automergeCodeMirror.connectCodeMirror(codeMirror, getText)
+      automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
       assert.strictEqual(codeMirror.getValue(), 'World')
 
@@ -96,8 +95,8 @@ describe('AutomerCodeMirror', () => {
 
   describe('CodeMirror => Automerge', () => {
     it('handles 2 consecutive CodeMirror changes', () => {
-      const automergeCodeMirror = new AutomergeCodeMirror<Automerge.Doc<TestDoc>>(doc, (newDoc) => (doc = newDoc))
-      automergeCodeMirror.connectCodeMirror(codeMirror, getText)
+      const automergeCodeMirror = new AutomergeCodeMirror(change)
+      automergeCodeMirror.connectCodeMirror(doc, codeMirror, getText)
 
       codeMirror.replaceRange('hello', codeMirror.posFromIndex(0))
       assert.strictEqual(codeMirror.getValue(), 'hello')

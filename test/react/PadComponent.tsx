@@ -18,29 +18,27 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
   const [doc, setDoc] = useState(peerDoc.doc)
 
   useEffect(() => {
+    console.log('EFFECT RUNNING')
     return peerDoc.subscribe((oldDoc, newDoc) => {
-      setDoc(newDoc)
+      console.log('Effect new Doc:\n%s ->\n%s', JSON.stringify(oldDoc), JSON.stringify(newDoc))
       automergeCodeMirror.updateCodeMirrors(oldDoc, newDoc)
+      setDoc(newDoc)
     })
   }, [])
 
   function createSheet() {
-    const newDoc = Automerge.change(doc, (proxy) => {
+    peerDoc.change((proxy) => {
       if (proxy.sheets == undefined) proxy.sheets = []
       proxy.sheets.push(new Automerge.Text(String(proxy.sheets.length)))
     })
-    setDoc(newDoc)
-    peerDoc.notify(newDoc)
   }
 
   function removeSheet() {
-    const newDoc = Automerge.change(doc, (proxy) => {
+    peerDoc.change((proxy) => {
       if (proxy.sheets) {
         proxy.sheets.shift()
       }
     })
-    setDoc(newDoc)
-    peerDoc.notify(newDoc)
   }
 
   function makeCodeMirror(element: HTMLElement): CodeMirror.Editor {
@@ -64,6 +62,7 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
         return (
           <div key={i} className="sheet">
             <AutomergeCodeMirrorComponent<Pad>
+              doc={doc}
               makeCodeMirror={makeCodeMirror}
               automergeCodeMirror={automergeCodeMirror}
               getText={getText}

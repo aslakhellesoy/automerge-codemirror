@@ -27,8 +27,13 @@ export default class PeerDoc<T> {
     }
   }
 
-  notify(newDoc: Automerge.Doc<T>) {
-    this.peer.notify(newDoc)
+  change(changeFn: Automerge.ChangeFn<T>) {
+    const oldDoc = this._doc
+    this._doc = Automerge.change(this._doc, changeFn)
+    for (const handler of this.handlers) {
+      handler(oldDoc, this._doc)
+    }
+    this.peer.notify(this._doc)
   }
 
   subscribe(handler: Handler<T>) {

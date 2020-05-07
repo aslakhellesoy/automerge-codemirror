@@ -4,7 +4,7 @@ import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 
 import './style.css'
-import { Pad, PadComponent } from './components/PadComponent'
+import { Pad, PadComponent } from '../test/react/PadComponent'
 
 import PeerDoc from '../src/manymerge/PeerDoc'
 import HubDoc from '../src/manymerge/HubDoc'
@@ -40,11 +40,13 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
       <div className="pads">
         {peerIds.map((peerId) => {
           const peerDoc = peerDocById.get(peerId)!
-          const notify = peerDoc.notify.bind(peerDoc)
           return (
             <div key={peerId}>
               <h3>{peerId}</h3>
-              <PadComponent peerDoc={peerDoc} automergeCodeMirror={new AutomergeCodeMirror<Pad>(peerDoc.doc, notify)} />
+              <PadComponent
+                peerDoc={peerDoc}
+                automergeCodeMirror={new AutomergeCodeMirror<Pad>(peerDoc.change.bind(peerDoc))}
+              />
             </div>
           )
         })}
