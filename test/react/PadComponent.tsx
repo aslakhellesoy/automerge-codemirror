@@ -27,8 +27,10 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
   function createSheet() {
     peerDoc.change((proxy) => {
       if (proxy.sheets == undefined) proxy.sheets = []
-      proxy.sheets.push(new Automerge.Text(String(proxy.sheets.length)))
+      proxy.sheets.push(new Automerge.Text())
     })
+
+    peerDoc.notify()
   }
 
   function removeSheet() {
@@ -37,6 +39,8 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
         proxy.sheets.shift()
       }
     })
+
+    peerDoc.notify()
   }
 
   function makeCodeMirror(element: HTMLElement): CodeMirror.Editor {
