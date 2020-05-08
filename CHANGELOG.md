@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [6.0.0]
+
+### Changed
+
+- Removed dependency on `Automerge.WatchableDoc`
+- Completely changed the public API again :-(
+
 ## [5.0.2]
 
 ### Fixed
@@ -93,7 +100,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- Releases -->
 
-[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.2...master
+[unreleased]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v6.0.0...master
+[6.0.0]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.2...v6.0.0
 [5.0.2]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.1...v5.0.2
 [5.0.1]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v5.0.0...v5.0.1
 [5.0.0]: https://github.com/aslakhellesoy/automerge-codemirror/compare/v4.0.5...v5.0.0
