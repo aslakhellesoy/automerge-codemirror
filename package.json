@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
+    "@cucumber/manymerge": "^2.5.5",
     "@storybook/addon-actions": "^5.0.11",
     "@storybook/addon-links": "^5.0.11",
     "@storybook/addons": "^5.0.11",
@@ -43,7 +44,6 @@
     "cssstyle": "^2.3.0",
     "husky": "^4.2.3",
     "jsdom": "^16.2.2",
-    "manymerge": "^2.5.4",
     "mocha": "^7.1.1",
     "nyc": "^15.0.1",
     "prettier": "^2.0.4",

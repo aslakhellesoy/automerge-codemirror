@@ -1,4 +1,4 @@
-import { Message, Peer } from 'manymerge'
+import { Message, Peer } from '@cucumber/manymerge'
 import Automerge from 'automerge'
 
 type Handler<T> = (oldDoc: Automerge.Doc<T>, newDoc: Automerge.Doc<T>) => void

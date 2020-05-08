@@ -8,7 +8,7 @@ import { Pad, PadComponent } from '../test/react/PadComponent'
 
 import PeerDoc from '../src/manymerge/PeerDoc'
 import HubDoc from '../src/manymerge/HubDoc'
-import { Message } from 'manymerge'
+import { Message } from '@cucumber/manymerge'
 import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {

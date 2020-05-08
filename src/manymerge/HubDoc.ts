@@ -1,4 +1,4 @@
-import { Message, Hub } from 'manymerge'
+import { Message, Hub } from '@cucumber/manymerge'
 import Automerge from 'automerge'
 
 export default class HubDoc<T> {
