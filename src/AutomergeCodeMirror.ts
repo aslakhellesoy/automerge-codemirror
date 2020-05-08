@@ -18,12 +18,7 @@ export default class AutomergeCodeMirror<D> {
   constructor(private readonly change: Change<D>) {}
 
   getCodeMirror(textObjectId: Automerge.UUID): CodeMirror.Editor | undefined {
-    const editor = this.codeMirrorByTextId.get(textObjectId)
-    if (!editor) {
-      console.log(`Nothing for ${textObjectId}, but I had ${Array.from(this.codeMirrorByTextId.keys())}`)
-    }
-
-    return editor
+    return this.codeMirrorByTextId.get(textObjectId)
   }
 
   /**
@@ -57,12 +52,10 @@ export default class AutomergeCodeMirror<D> {
 
     codeMirror.on('change', codeMirrorChangeHandler)
 
-    const disconnectCodeMirror = () => {
+    return () => {
       codeMirror.off('change', codeMirrorChangeHandler)
       this.codeMirrorByTextId.delete(textId)
     }
-
-    return disconnectCodeMirror
   }
 
   updateCodeMirrors(oldDoc: D, newDoc: D): D {
