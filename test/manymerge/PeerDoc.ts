@@ -33,6 +33,9 @@ export default class PeerDoc<T> {
     for (const handler of this.handlers) {
       handler(oldDoc, this._doc)
     }
+  }
+
+  notify() {
     this.peer.notify(this._doc)
   }
 

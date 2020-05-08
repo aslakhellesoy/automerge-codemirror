@@ -20,24 +20,20 @@ describe('<AutomergeCodeMirrorComponent>', () => {
 
     hubDoc = new HubDoc(
       (peerId: string, msg) => {
-        peerDocs[peerId].applyMessage(msg)
-        // setTimeout(()=>peerDocs[peerId].applyMessage(msg), 1)
+        process.nextTick(() => peerDocs[peerId].applyMessage(msg))
       },
       (msg) =>
         Object.keys(peerDocs).forEach((peerId) => {
           const peerDoc = peerDocs[peerId]
-          peerDoc.applyMessage(msg)
-          // setTimeout(()=>peerDoc.applyMessage(msg), 1)
+          process.nextTick(() => peerDoc.applyMessage(msg))
         })
     )
 
     peerDocs['bot'] = new PeerDoc<Pad>((msg) => {
-      hubDoc.applyMessage('bot', msg)
-      // setTimeout(()=>hubDoc.applyMessage('bot', msg), 1)
+      process.nextTick(() => hubDoc.applyMessage('bot', msg))
     })
     peerDocs['user'] = new PeerDoc<Pad>((msg) => {
-      hubDoc.applyMessage('user', msg)
-      // setTimeout(()=>hubDoc.applyMessage('user', msg), 1)
+      process.nextTick(() => hubDoc.applyMessage('user', msg))
     })
 
     const userPeerDoc = peerDocs['user']
@@ -57,6 +53,7 @@ describe('<AutomergeCodeMirrorComponent>', () => {
     codeMirror.setValue('hello')
     assert.strictEqual(peerDocs['user'].doc.sheets[0].toString(), 'hello')
 
+    peerDocs['user'].notify()
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     assert.strictEqual(peerDocs['bot'].doc.sheets[0].toString(), 'hello')
@@ -64,15 +61,33 @@ describe('<AutomergeCodeMirrorComponent>', () => {
 
   it('updates CodeMirror doc when Automerge doc changes', async () => {
     peerDocs['bot'].change((proxy) => (proxy.sheets = [new Automerge.Text()]))
+    peerDocs['bot'].notify()
     const codeMirror: CodeMirror.Editor = await findCodeMirrorEditor(host)
     assert.strictEqual(codeMirror.getValue(), '')
 
     peerDocs['bot'].change((proxy) => proxy.sheets[0].insertAt!(0, ...'hello'.split('')))
+    peerDocs['bot'].notify()
 
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     assert.strictEqual(codeMirror.getValue(), 'hello')
     assert.strictEqual(peerDocs['user'].doc.sheets[0].toString(), 'hello')
+  })
+
+  it('syncs CodeMirror doc when Automerge doc changes om 2 peers', async () => {
+    peerDocs['bot'].change((proxy) => (proxy.sheets = [new Automerge.Text()]))
+    peerDocs['bot'].notify()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    assert.strictEqual(peerDocs['user'].doc.sheets[0].toString(), '')
+
+    peerDocs['bot'].change((proxy) => proxy.sheets[0].insertAt!(0, ...'BOT'.split('')))
+    peerDocs['user'].change((proxy) => proxy.sheets[0].insertAt!(0, ...'USER'.split('')))
+
+    peerDocs['bot'].notify()
+    peerDocs['user'].notify()
+
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    assert.strictEqual(peerDocs['bot'].doc.sheets[0].toString(), peerDocs['user'].doc.sheets[0].toString())
   })
 })
 
