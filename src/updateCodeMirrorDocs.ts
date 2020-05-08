@@ -1,23 +1,17 @@
 import Automerge from 'automerge'
-import CodeMirror from 'codemirror'
 import Mutex from './Mutex'
 
 /**
  * Applies the diff between two Automerge documents to CodeMirror instances
- *
- * @param oldDoc
- * @param newDoc
- * @param getCodeMirror
- * @param mutex
  */
 export default function updateCodeMirrorDocs<D>(
   oldDoc: D,
   newDoc: D,
   getCodeMirror: (textObjectId: Automerge.UUID) => CodeMirror.Editor | undefined,
   mutex: Mutex
-): void {
+): D {
   if (mutex.locked || !oldDoc) {
-    return
+    return newDoc
   }
   const diffs = Automerge.diff(oldDoc, newDoc)
 
@@ -41,4 +35,5 @@ export default function updateCodeMirrorDocs<D>(
       }
     }
   }
+  return newDoc
 }

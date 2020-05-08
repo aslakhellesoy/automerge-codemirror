@@ -1,5 +1,6 @@
 // Minimal browser-like environment to make CodeMirror load (for tests in Node.js)
 import { JSDOM } from 'jsdom'
+import { CSSStyleDeclaration } from 'cssstyle'
 
 const dom = new JSDOM(`<!DOCTYPE html>
 <html lang="en">
@@ -41,6 +42,8 @@ const patchedCreateRange = function () {
 }
 dom.window.document.createRange = patchedCreateRange
 
+// @ts-ignore
+global.getComputedStyle = () => new CSSStyleDeclaration()
 // @ts-ignore
 global.window = dom.window
 // @ts-ignore

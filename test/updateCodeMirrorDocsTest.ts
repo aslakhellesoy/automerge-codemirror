@@ -77,6 +77,28 @@ describe('updateCodeMirrorDocs', () => {
       assert.deepStrictEqual(doc.text.toString(), codeMirror.getValue())
     })
   }
+
+  context('performance tests', () => {
+    it('is very fast', () => {
+      const initialDoc = Automerge.from({ text: new Automerge.Text() })
+      let doc = initialDoc
+      for (let i = 0; i < 11; i++) {
+        doc = Automerge.change(doc, (proxy) => {
+          if (i % 2 == 0) {
+            proxy.text.insertAt!(0, ...'hello'.split(''))
+          } else {
+            proxy.text.deleteAt!(0, 5)
+          }
+        })
+      }
+
+      const codeMirror = CodeMirror(div)
+      const mutex = new Mutex()
+
+      updateCodeMirrorDocs(initialDoc, doc, () => codeMirror, mutex)
+      assert.deepStrictEqual(codeMirror.getValue(), doc.text.toString())
+    })
+  })
 })
 
 function monkeyModify(doc: TestDoc): TestDoc {

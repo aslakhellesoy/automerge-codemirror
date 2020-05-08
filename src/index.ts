@@ -1,5 +1,4 @@
-import connectAutomergeDoc from './connectAutomergeDoc'
-import AutomergeCodeMirror from './react/AutomergeCodeMirror'
-import useAutomergeDoc from './react/useAutomergeDoc'
+import AutomergeCodeMirror from './AutomergeCodeMirror'
+import AutomergeCodeMirrorComponent from './react/AutomergeCodeMirrorComponent'
 
-export { AutomergeCodeMirror, connectAutomergeDoc, useAutomergeDoc }
+export { AutomergeCodeMirror, AutomergeCodeMirrorComponent }

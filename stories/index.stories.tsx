@@ -3,18 +3,29 @@ import React from 'react'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/material.css'
 
-import Automerge from 'automerge'
 import './style.css'
-import { Pad, PadComponent } from './components/PadComponent'
-import connectAutomergeDoc from '../src/connectAutomergeDoc'
+import { Pad, PadComponent } from '../test/react/PadComponent'
+
+import PeerDoc from '../test/manymerge/PeerDoc'
+import HubDoc from '../test/manymerge/HubDoc'
+import { Message } from '@cucumber/manymerge'
+import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
 
 storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single Automerge doc', () => {
-  const watchableDocWilma = new Automerge.WatchableDoc(Automerge.init<Pad>())
-  const watchableDocFred = new Automerge.WatchableDoc(Automerge.init<Pad>())
-  const watchableDocBarney = new Automerge.WatchableDoc(Automerge.init<Pad>())
+  const peerDocById = new Map<string, PeerDoc<Pad>>()
 
-  connect(watchableDocWilma, watchableDocFred)
-  connect(watchableDocFred, watchableDocBarney)
+  const hubDoc = new HubDoc<Pad>(
+    (peerId: string, msg: Message) => peerDocById.get(peerId)!.applyMessage(msg),
+    (msg: Message) => Array.from(peerDocById.values()).forEach((peerDoc) => peerDoc.applyMessage(msg))
+  )
+
+  const peerIds = ['Wilma', 'Fred', 'Barney']
+  for (const peerId of peerIds) {
+    peerDocById.set(
+      peerId,
+      new PeerDoc<Pad>((msg) => hubDoc.applyMessage(peerId, msg))
+    )
+  }
 
   return (
     <div>
@@ -23,42 +34,23 @@ storiesOf('Collaboration', module).add('Multiple CodeMirrors linked to a single 
         CodeMirror editor.
       </p>
       <p>
-        Wilma and Fred's pads are connected. Fred and Barney's pads are also connected. When either of them creates a
-        new pad or edits a sheet in a pad, changes are reflected in the other's pads and sheets.
-      </p>
-      <p>
-        The source code is{' '}
+        The source code is at
         <a href="https://github.com/aslakhellesoy/automerge-codemirror/blob/master/stories/index.stories.tsx">here</a>.
       </p>
       <div className="pads">
-        <div>
-          <h3>Wilma</h3>
-          <PadComponent watchableDoc={watchableDocWilma} connectCodeMirror={connectAutomergeDoc(watchableDocWilma)} />
-        </div>
-        <div>
-          <h3>Fred</h3>
-          <PadComponent watchableDoc={watchableDocFred} connectCodeMirror={connectAutomergeDoc(watchableDocFred)} />
-        </div>
-        <div>
-          <h3>Barney</h3>
-          <PadComponent watchableDoc={watchableDocBarney} connectCodeMirror={connectAutomergeDoc(watchableDocBarney)} />
-        </div>
+        {peerIds.map((peerId) => {
+          const peerDoc = peerDocById.get(peerId)!
+          return (
+            <div key={peerId}>
+              <h3>{peerId}</h3>
+              <PadComponent
+                peerDoc={peerDoc}
+                automergeCodeMirror={new AutomergeCodeMirror<Pad>(peerDoc.change.bind(peerDoc))}
+              />
+            </div>
+          )
+        })}
       </div>
     </div>
   )
 })
-
-function connect<D>(watchableDocA: Automerge.WatchableDoc<D>, watchableDocB: Automerge.WatchableDoc<D>) {
-  watchableDocA.registerHandler(() =>
-    setIfDifferent(watchableDocB, Automerge.merge(watchableDocB.get(), watchableDocA.get()))
-  )
-  watchableDocB.registerHandler(() =>
-    setIfDifferent(watchableDocA, Automerge.merge(watchableDocA.get(), watchableDocB.get()))
-  )
-}
-
-function setIfDifferent<D>(watchableDoc: Automerge.WatchableDoc<D>, doc: D) {
-  if (watchableDoc.get() !== doc) {
-    watchableDoc.set(doc)
-  }
-}
