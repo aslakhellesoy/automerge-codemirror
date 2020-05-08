@@ -1,7 +1,7 @@
 import Automerge from 'automerge'
 import React, { FunctionComponent, useEffect, useState } from 'react'
 import CodeMirror from 'codemirror'
-import PeerDoc from '../../src/manymerge/PeerDoc'
+import PeerDoc from '../../test/manymerge/PeerDoc'
 import AutomergeCodeMirror from '../../src/AutomergeCodeMirror'
 import AutomergeCodeMirrorComponent from '../../src/react/AutomergeCodeMirrorComponent'
 
@@ -18,9 +18,7 @@ const PadComponent: FunctionComponent<Props> = ({ peerDoc, automergeCodeMirror }
   const [doc, setDoc] = useState(peerDoc.doc)
 
   useEffect(() => {
-    console.log('EFFECT RUNNING')
     return peerDoc.subscribe((oldDoc, newDoc) => {
-      console.log('Effect new Doc:\n%s ->\n%s', JSON.stringify(oldDoc), JSON.stringify(newDoc))
       automergeCodeMirror.updateCodeMirrors(oldDoc, newDoc)
       setDoc(newDoc)
     })

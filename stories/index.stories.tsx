@@ -6,8 +6,8 @@ import 'codemirror/theme/material.css'
 import './style.css'
 import { Pad, PadComponent } from '../test/react/PadComponent'
 
-import PeerDoc from '../src/manymerge/PeerDoc'
-import HubDoc from '../src/manymerge/HubDoc'
+import PeerDoc from '../test/manymerge/PeerDoc'
+import HubDoc from '../test/manymerge/HubDoc'
 import { Message } from '@cucumber/manymerge'
 import AutomergeCodeMirror from '../src/AutomergeCodeMirror'
 

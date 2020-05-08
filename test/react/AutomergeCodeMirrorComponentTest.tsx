@@ -7,8 +7,8 @@ import React from 'react'
 import assert from 'assert'
 import AutomergeCodeMirror from '../../src/AutomergeCodeMirror'
 import { Pad, PadComponent } from './PadComponent'
-import HubDoc from '../../src/manymerge/HubDoc'
-import PeerDoc from '../../src/manymerge/PeerDoc'
+import HubDoc from '../../test/manymerge/HubDoc'
+import PeerDoc from '../../test/manymerge/PeerDoc'
 
 describe('<AutomergeCodeMirrorComponent>', () => {
   let host: HTMLElement
@@ -20,13 +20,11 @@ describe('<AutomergeCodeMirrorComponent>', () => {
 
     hubDoc = new HubDoc(
       (peerId: string, msg) => {
-        console.log('hub -> %s', peerId)
         peerDocs[peerId].applyMessage(msg)
         // setTimeout(()=>peerDocs[peerId].applyMessage(msg), 1)
       },
       (msg) =>
         Object.keys(peerDocs).forEach((peerId) => {
-          console.log('hub -> %s', peerId)
           const peerDoc = peerDocs[peerId]
           peerDoc.applyMessage(msg)
           // setTimeout(()=>peerDoc.applyMessage(msg), 1)
@@ -34,12 +32,10 @@ describe('<AutomergeCodeMirrorComponent>', () => {
     )
 
     peerDocs['bot'] = new PeerDoc<Pad>((msg) => {
-      console.log('bot -> hub')
       hubDoc.applyMessage('bot', msg)
       // setTimeout(()=>hubDoc.applyMessage('bot', msg), 1)
     })
     peerDocs['user'] = new PeerDoc<Pad>((msg) => {
-      console.log('user -> hub')
       hubDoc.applyMessage('user', msg)
       // setTimeout(()=>hubDoc.applyMessage('user', msg), 1)
     })
@@ -57,7 +53,6 @@ describe('<AutomergeCodeMirrorComponent>', () => {
 
   it('updates Automerge doc when CodeMirror doc changes', async () => {
     peerDocs['user'].change((proxy) => (proxy.sheets = [new Automerge.Text()]))
-    console.log('NEVER GET HERE!!!')
     const codeMirror: CodeMirror.Editor = await findCodeMirrorEditor(host)
     codeMirror.setValue('hello')
     assert.strictEqual(peerDocs['user'].doc.sheets[0].toString(), 'hello')
